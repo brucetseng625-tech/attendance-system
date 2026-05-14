@@ -1,0 +1,28 @@
+camera:
+  source: 0  # 0 = default webcam, or RTSP URL for IP camera
+  fps: 30
+
+detection:
+  model: yolov8n.pt
+  confidence: 0.5
+  iou: 0.5
+
+tracking:
+  track_thresh: 0.5
+  track_buffer: 30
+  match_thresh: 0.8
+
+face_recognition:
+  model: buffalo_l  # buffalo_l = most accurate, buffalo_s = faster
+  match_threshold: 0.4  # lower = stricter
+  nms_threshold: 0.4
+
+attendance:
+  database: data/attendance.db
+  cooldown_seconds: 1800  # 30 min between same-person check-ins
+  log_file: logs/attendance.log
+
+zones:
+  checkin:
+    # polygon coordinates (normalized 0-1, set in UI or here)
+    points: []
