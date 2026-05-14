@@ -1,11 +1,35 @@
+# Python bytecode
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+
+# Distribution / packaging
 *.egg-info/
 dist/
 build/
+*.egg
+
+# Virtual environments
 .env
+.venv/
+venv/
+
+# Database files
 data/*.db
-data/faces.db
-data/attendance.db
+
+# Log files
 logs/*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# pytest
+.pytest_cache/
