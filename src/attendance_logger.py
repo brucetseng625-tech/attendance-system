@@ -14,46 +14,54 @@ class AttendanceLogger:
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.db_path = db_path
         self.cooldown = cooldown_seconds
-        self.conn = sqlite3.connect(db_path)
         self._init_db()
 
+    def _get_conn(self):
+        """Get a new connection for thread safety."""
+        return sqlite3.connect(self.db_path, check_same_thread=False)
+
     def _init_db(self):
-        self.conn.execute("""
-            CREATE TABLE IF NOT EXISTS attendance (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                employee TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
-                confidence REAL DEFAULT 0.0
+        conn = self._get_conn()
+        try:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS attendance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    employee TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    confidence REAL DEFAULT 0.0
+                )
+            """)
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_attendance_emp_time "
+                "ON attendance(employee, timestamp)"
             )
-        """)
-        self.conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_attendance_emp_time "
-            "ON attendance(employee, timestamp)"
-        )
-        self.conn.commit()
+            conn.commit()
+        finally:
+            conn.close()
 
     def log(self, employee: str, event_type: str = "checkin", confidence: float = 0.0) -> dict:
         """Log an attendance event.
 
         Returns dict with status: 'logged', 'cooldown', or 'error'.
         """
-        now = datetime.now()
-        ts_str = now.isoformat()
-
-        if self._in_cooldown(employee, event_type, now):
-            return {
-                "status": "cooldown",
-                "employee": employee,
-                "message": "Still in cooldown period",
-            }
-
+        conn = self._get_conn()
         try:
-            self.conn.execute(
+            now = datetime.now()
+            ts_str = now.isoformat()
+
+            if self._in_cooldown(conn, employee, event_type, now):
+                return {
+                    "status": "cooldown",
+                    "employee": employee,
+                    "message": "Still in cooldown period",
+                }
+
+            conn.execute(
                 "INSERT INTO attendance (employee, event_type, timestamp, confidence) VALUES (?, ?, ?, ?)",
                 (employee, event_type, ts_str, confidence),
             )
-            self.conn.commit()
+            conn.commit()
             return {
                 "status": "logged",
                 "employee": employee,
@@ -62,10 +70,12 @@ class AttendanceLogger:
             }
         except Exception as e:
             return {"status": "error", "message": str(e)}
+        finally:
+            conn.close()
 
-    def _in_cooldown(self, employee: str, event_type: str, now: datetime) -> bool:
+    def _in_cooldown(self, conn, employee: str, event_type: str, now: datetime) -> bool:
         """Check if the last event of this type is within cooldown period."""
-        row = self.conn.execute(
+        row = conn.execute(
             "SELECT timestamp FROM attendance WHERE employee = ? AND event_type = ? ORDER BY timestamp DESC LIMIT 1",
             (employee, event_type),
         ).fetchone()
@@ -78,31 +88,39 @@ class AttendanceLogger:
 
     def get_today_records(self, employee: Optional[str] = None) -> list[dict]:
         """Get today's attendance records."""
-        today = datetime.now().strftime("%Y-%m-%d")
-        if employee:
-            rows = self.conn.execute(
-                "SELECT employee, event_type, timestamp, confidence FROM attendance WHERE employee = ? AND timestamp LIKE ?",
-                (employee, f"{today}%"),
-            ).fetchall()
-        else:
-            rows = self.conn.execute(
-                "SELECT employee, event_type, timestamp, confidence FROM attendance WHERE timestamp LIKE ? ORDER BY timestamp DESC",
-                (f"{today}%",),
-            ).fetchall()
-        return [
-            {"employee": r[0], "event": r[1], "timestamp": r[2], "confidence": r[3]}
-            for r in rows
-        ]
+        conn = self._get_conn()
+        try:
+            today = datetime.now().strftime("%Y-%m-%d")
+            if employee:
+                rows = conn.execute(
+                    "SELECT employee, event_type, timestamp, confidence FROM attendance WHERE employee = ? AND timestamp LIKE ?",
+                    (employee, f"{today}%"),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT employee, event_type, timestamp, confidence FROM attendance WHERE timestamp LIKE ? ORDER BY timestamp DESC",
+                    (f"{today}%",),
+                ).fetchall()
+            return [
+                {"employee": r[0], "event": r[1], "timestamp": r[2], "confidence": r[3]}
+                for r in rows
+            ]
+        finally:
+            conn.close()
 
     def get_all_records(self) -> list[dict]:
         """Get all attendance records."""
-        rows = self.conn.execute(
-            "SELECT employee, event_type, timestamp, confidence FROM attendance ORDER BY timestamp DESC"
-        ).fetchall()
-        return [
-            {"employee": r[0], "event": r[1], "timestamp": r[2], "confidence": r[3]}
-            for r in rows
-        ]
+        conn = self._get_conn()
+        try:
+            rows = conn.execute(
+                "SELECT employee, event_type, timestamp, confidence FROM attendance ORDER BY timestamp DESC"
+            ).fetchall()
+            return [
+                {"employee": r[0], "event": r[1], "timestamp": r[2], "confidence": r[3]}
+                for r in rows
+            ]
+        finally:
+            conn.close()
 
     def export_csv(self, output_path: str):
         """Export all records to CSV."""
