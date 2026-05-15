@@ -167,5 +167,5 @@ class AttendanceLogger:
             writer.writerows(records)
 
     def close(self):
-        """Close database connection."""
-        self.conn.close()
+        """Close database connection. No-op since we use per-operation connections now."""
+        pass
