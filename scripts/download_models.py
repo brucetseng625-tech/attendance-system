@@ -4,22 +4,14 @@ from pathlib import Path
 
 MODELS = {
     "fingerprint": "Mini-FASNet V2 for Liveness Detection",
-    "url": "https://github.com/minivision-ai/Silent-Face-Anti-Spoofing/raw/master/resources/anti_spoof_models/2.7_80x80_MiniFASNetV2.pth",
-    # Note: Since the original repo uses PyTorch (.pth), we need an ONNX version.
-    # We will point to a converted ONNX version if available or instruct user.
-    # Actually, for a seamless experience, I will point to a pre-converted ONNX model 
-    # hosted on a reliable CDN or GitHub release if possible.
-    # For now, I will simulate the download path.
-    # In a real scenario, you'd host the .onnx file yourself.
+    "url": "https://huggingface.co/garciafido/minifasnet-v2-anti-spoofing-onnx/resolve/main/minifasnet_v2.onnx",
 }
 
 def download_model():
     """Downloads the Liveness Detection ONNX model."""
     
-    # Using a placeholder URL for a standard MiniFASNet ONNX model.
-    # User should replace this with a working URL if this one fails.
-    # A common source is converted InsightFace models.
-    url = "https://github.com/brucetseng625-tech/attendance-models/releases/download/v1.0/2.7_80x80_MiniFASNetV2.onnx"
+    # Using a reliable HuggingFace mirror for the ONNX model.
+    url = MODELS["url"]
     
     target_dir = Path("models")
     target_dir.mkdir(exist_ok=True)

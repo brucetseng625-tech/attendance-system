@@ -51,24 +51,16 @@ class LivenessDetector:
         # Run model
         outputs = self.session.run(None, {self.input_name: input_tensor})
         
-        # Assuming single output is the score (softmax usually applied or raw logits)
-        # Mini-FASNet usually outputs 2 classes: [Spoof, Real] or [Real, Spoof]
-        # We need to check the specific model structure. 
-        # Most standard FASNet outputs are [Real, Spoof] scores.
-        scores = outputs[0][0] # [Real_score, Spoof_score]
+        # Output shape is usually [1, 3] for MiniFASNet (Real, Spoof1, Spoof2)
+        scores = outputs[0][0]
         
-        # If softmax wasn't applied in model:
-        # scores = np.exp(scores) / np.sum(np.exp(scores))
+        # Apply softmax if scores are logits
+        scores = np.exp(scores) / np.sum(np.exp(scores))
         
-        # We want the Real score
-        # Usually index 1 is Real, index 0 is Fake. 
-        # *Correction*: Many models output just one float (Real prob).
-        # Let's assume standard MiniFASNet output logic.
-        # For this implementation, we will treat the max value index as the class.
+        # Class 0 is typically Real in minivision-ai models
+        real_score = scores[0]
         
-        is_real_score = scores[1] # Adjust based on specific model weights used
-        
-        return float(is_real_score)
+        return float(real_score)
 
     def is_real(self, face_img: np.ndarray, threshold: float = 0.8) -> bool:
         """Check if the face is real based on threshold."""
