@@ -48,6 +48,21 @@ Edit `config.yaml` to customize the system:
 - `buffalo_l` — Most accurate, slower. Best for production.
 - `buffalo_s` — Faster, slightly less accurate. Best for low-power devices.
 
+### Using an IP Camera
+
+To use an IP camera (RTSP stream) instead of a USB webcam:
+
+1. Find the RTSP URL of your camera. Common examples:
+   - **Hikvision**: `rtsp://admin:password@192.168.1.100:554/h264/ch1/main/av_stream`
+   - **Dahua**: `rtsp://admin:password@192.168.1.100:554/cam/realmonitor?channel=1`
+   - **Generic**: `rtsp://username:password@IP_ADDRESS:PORT/path`
+2. Edit `config.yaml` and replace the `source` value with your RTSP URL:
+   ```yaml
+   camera:
+     source: "rtsp://admin:password@192.168.1.100:554/h264/ch1/main/av_stream"
+   ```
+3. Save and run the application. The system will automatically switch to the IP stream.
+
 ---
 
 ## 3. Register Employees

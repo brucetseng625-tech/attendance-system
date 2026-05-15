@@ -8,6 +8,7 @@ Before you begin, ensure you have the following installed:
 
 * **Python 3.10+**: Recommended version is **Python 3.11** (tested).
 * **Webcam**: Built-in laptop camera or external USB webcam (tested with FaceTime HD Camera).
+* **IP Camera (Optional)**: Supports RTSP protocol (e.g., Hikvision, Dahua).
 * **Operating System**: macOS (tested), Linux, Windows (OpenCV support required).
 
 ## Architecture
@@ -59,6 +60,23 @@ python main.py
 ```
 
 Press **`q`** to quit. See the [full usage guide](docs/usage.md) for configuration, export, and troubleshooting.
+
+## IP Camera (RTSP) Setup
+
+To use an IP camera instead of a USB webcam, update the `source` in `config.yaml`:
+
+```yaml
+camera:
+  source: "rtsp://admin:12345@192.168.1.50:554/h264/ch1/main/av_stream"
+```
+
+**Supported Protocols:** RTSP (Real Time Streaming Protocol).
+**Common Formats:**
+- **Hikvision:** `rtsp://admin:password@IP:554/h264/ch1/main/av_stream`
+- **Dahua:** `rtsp://admin:password@IP:554/cam/realmonitor?channel=1`
+- **Axis:** `rtsp://root:pass@IP/axis-media/media.amp`
+
+> **Tip:** Ensure your Mac and the IP camera are on the same network.
 
 ## Project Structure
 
