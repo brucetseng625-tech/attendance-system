@@ -137,6 +137,8 @@ def page_register():
             file_bytes = np.frombuffer(camera_img.read(), np.uint8)
             frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
             if frame is not None:
+                # Flip horizontally to match main.py behavior (non-mirror mode)
+                frame = cv2.flip(frame, 1)
                 st.image(frame, channels="BGR", caption="Captured photo")
                 if st.button("Register from Camera", type="primary"):
                     _process_registration(name, employee_id, frame, face_rec, face_db)
@@ -224,6 +226,8 @@ def page_live_camera():
         file_bytes = np.frombuffer(camera_img.read(), np.uint8)
         frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
         if frame is not None:
+            # Flip horizontally to match main.py behavior (non-mirror mode)
+            frame = cv2.flip(frame, 1)
             st.image(frame, channels="BGR", caption="Camera preview")
             st.write(f"Frame size: {frame.shape[1]}x{frame.shape[0]}")
 
