@@ -38,6 +38,20 @@ python main.py
 
 ---
 
+## 🔐 Default Credentials | 預設帳號密碼
+
+> ⚠️ **重要：** 首次登入後請立即修改密碼！（管理員：`Settings > 🔑 管理者密碼`；員工：`Employee Portal > 🔐 修改密碼`）
+
+| Role | Default Password | 說明 |
+|------|------------------|------|
+| **Admin (管理員)** | `admin` | 首次登入後建議立即修改 |
+| **Employee (員工)** | `1234` | 員工可自行修改個人密碼 |
+
+- 所有密碼均以 **SHA-256 雜湊** 儲存於 `data/users.db`，非明文。
+- 若已修改過密碼，預設值即失效，需使用新密碼登入。
+
+---
+
 ## 🛡️ Guard Mode | 門警模式
 
 Toggle Guard Mode in `config.yaml` or the Web UI ("🛡️ Guard Mode" tab) to enable access control rules.
