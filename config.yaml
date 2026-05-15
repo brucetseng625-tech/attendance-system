@@ -42,3 +42,8 @@ lunch_break:
   enabled: false
   start: "12:00"
   end: "13:00"
+
+liveness_detection:
+  enabled: true  # Enable Anti-Spoofing (Liveness) check
+  model_path: "models/fasnet.onnx"
+  threshold: 0.8  # Probability threshold for "Real" face

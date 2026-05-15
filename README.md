@@ -11,6 +11,7 @@ Real-time face recognition attendance system powered by YOLOv8 detection, BYTETr
 - **Real-time Detection**: YOLOv8 + Supervision (BYTETrack) for person tracking. (即時人臉偵測與追蹤)
 - **Face Recognition**: InsightFace ArcFace with high accuracy. (高精度人臉辨識)
 - **Auto Check-in/Check-out**: Single camera auto-toggles between entry and exit logging. (單鏡頭自動判斷上下班進出)
+- **Liveness Detection (Phase 3)**: Silent Anti-Spoofing to block photos/screens using Mini-FASNet. (活體檢測：防止照片/螢幕造假)
 - **Guard Mode (Phase 2)**: Work-hour rules, Late/Abnormal warnings, and Leave/Business exemptions. (門警模式：上下班判定、異常警告、請假/公出差勤豁免)
 - **Employee Self-Service**: View personal attendance history and submit leave requests. (員工自助：查看個人打卡歷史、申請單據)
 - **Admin Password Management**: Secure SHA-256 hashed passwords with in-app change support. (管理者密碼：SHA-256 雜湊儲存，後台可直接修改)
@@ -30,7 +31,10 @@ pip install -r requirements.txt
 # 2. Register employees via Streamlit UI | 透過網頁註冊員工
 streamlit run src/ui/streamlit_app.py
 
-# 3. Run the attendance pipeline | 執行即時視訊打卡
+# 3. (Optional) Download Liveness Detection Model | 下載活體檢測模型
+python scripts/download_models.py
+
+# 4. Run the attendance pipeline | 執行即時視訊打卡
 python main.py
 ```
 

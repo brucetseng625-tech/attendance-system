@@ -16,6 +16,7 @@ from src.face_db import FaceDatabase
 from src.face_recognizer import FaceRecognizer
 from src.exception_manager import ExceptionManager
 from src.guard_engine import GuardEngine, GuardStatus
+from src.liveness_detector import LivenessDetector
 
 
 def setup_logging(config: dict) -> None:
@@ -48,6 +49,23 @@ def run_pipeline() -> None:
     face_rec = FaceRecognizer(model_name=config["face_recognition"]["model"])
 
     face_db = FaceDatabase(db_path=str(root / "data" / "faces.db"))
+
+    # Initialize Liveness Detector (Anti-Spoofing)
+    liveness_config = config.get("liveness_detection", {})
+    liveness_detector = None
+    if liveness_config.get("enabled", False):
+        try:
+            model_path = liveness_config.get("model_path", "models/fasnet.onnx")
+            if not Path(model_path).exists():
+                logger.warning(f"Liveness model not found at {model_path}. Skipping anti-spoofing.")
+                logger.warning("Run `python scripts/download_models.py` to download.")
+            else:
+                liveness_detector = LivenessDetector(model_path=str(root / model_path))
+                logger.info("🛡️ Liveness Detection (Anti-Spoofing) ENABLED")
+        except Exception as e:
+            logger.error(f"Failed to load Liveness Detector: {e}")
+    else:
+        logger.info("Liveness Detection DISABLED")
 
     att_logger = AttendanceLogger(
         db_path=str(root / config["attendance"]["database"]),
@@ -134,6 +152,23 @@ def run_pipeline() -> None:
                     face_region = frame[y1:y2, x1:x2]
                     if face_region.size == 0:
                         continue
+
+                    # --- Liveness Check (Anti-Spoofing) ---
+                    if liveness_detector:
+                        if not liveness_detector.is_real(face_region, threshold=liveness_config.get("threshold", 0.8)):
+                            logger.warning(f"SPOOF DETECTED on track_id {track_id}")
+                            # Visual feedback
+                            current_time = time.time()
+                            active_messages.append({
+                                "text": f"⚠️ 非活體 (照片/螢幕)!",
+                                "color": (0, 0, 255), # Red
+                                "expires_at": current_time + 2.0,
+                                "y_pos": 50,
+                                "is_success": False
+                            })
+                            attempted_ids[track_id] = time.time() # Cooldown to prevent spam
+                            continue
+                    # --------------------------------------
 
                     # Detect face in the person region
                     faces = face_rec.detect_faces(face_region)
