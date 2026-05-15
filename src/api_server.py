@@ -6,28 +6,26 @@ Usage:
 
 import json
 from pathlib import Path
-
-import uvicorn
-from fastapi import FastAPI
-from loguru import logger
-
-# We need to access the attendance logger directly or just read the DB.
-# Reading the DB directly is safer to avoid circular imports or thread issues.
-import sqlite3
 from datetime import datetime
 
-from src.config import get_project_root, load_config
+import uvicorn
+from fastapi import FastAPI, Query
+from loguru import logger
 
-app = FastAPI(title="Attendance System API", version="1.0.0")
+from src.config import get_project_root, load_config
+from src.exception_manager import ExceptionManager
+
+app = FastAPI(title="Attendance System API", version="1.1.0")
 
 
 def get_attendance_db_connection():
     """Get a connection to the attendance database."""
+    import sqlite3
     config = load_config()
     root = get_project_root()
     db_path = root / config["attendance"]["database"]
     conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row  # Return dictionary-like rows
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -39,7 +37,6 @@ async def health_check():
 @app.get("/api/v1/attendance/today")
 async def get_todays_attendance():
     """Get all attendance records for today."""
-    today_str = datetime.now().strftime("%Y-%m-%d")
     conn = get_attendance_db_connection()
     try:
         cursor = conn.execute(
@@ -47,7 +44,7 @@ async def get_todays_attendance():
         )
         rows = cursor.fetchall()
         return {
-            "date": today_str,
+            "date": datetime.now().strftime("%Y-%m-%d"),
             "count": len(rows),
             "records": [dict(row) for row in rows],
         }
@@ -71,6 +68,45 @@ async def get_attendance_history(days: int = 7):
         }
     finally:
         conn.close()
+
+
+@app.get("/api/v1/guard/status")
+async def get_guard_status(employee_id: str = Query(..., description="Employee Name or ID")):
+    """Get current access status for an employee."""
+    config = load_config()
+    guard_config = config.get("guard_mode", {})
+    
+    if not guard_config.get("enabled", False):
+        return {"status": "disabled", "message": "Guard mode is currently disabled."}
+
+    root = get_project_root()
+    exc_mgr = ExceptionManager(db_path=str(root / guard_config["exception_db"]))
+    
+    is_exempted = exc_mgr.is_exempted(employee_id)
+    if is_exempted:
+        return {"status": "exempted", "message": "Employee has an active leave/trip request."}
+
+    from src.guard_engine import GuardEngine
+    engine = GuardEngine(config)
+    status = engine.get_status(employee_id)
+    
+    return {
+        "status": status.status,
+        "message": status.message,
+        "is_abnormal": status.is_abnormal
+    }
+
+
+@app.get("/api/v1/exceptions")
+async def list_exceptions(status: str = "approved"):
+    """List all approved exceptions."""
+    config = load_config()
+    root = get_project_root()
+    exc_mgr = ExceptionManager(db_path=str(root / config["guard_mode"]["exception_db"]))
+    exceptions = exc_mgr.get_all_exceptions()
+    if status:
+        exceptions = [e for e in exceptions if e["status"] == status]
+    return {"count": len(exceptions), "exceptions": exceptions}
 
 
 if __name__ == "__main__":

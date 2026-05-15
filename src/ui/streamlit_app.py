@@ -21,6 +21,7 @@ from src.config import get_project_root, load_config
 from src.face_db import FaceDatabase
 from src.attendance_logger import AttendanceLogger
 from src.face_recognizer import FaceRecognizer
+from src.exception_manager import ExceptionManager
 
 ROOT = get_project_root()
 
@@ -410,6 +411,86 @@ def page_live_camera():
                 st.warning("No faces detected in the frame.")
 
 
+def page_guard_mode():
+    """Guard Mode: Manage access control rules and employee exceptions."""
+    st.title("🛡️ Access Control & Exceptions")
+    st.caption("Manage work hours, leave requests, and business trips.")
+
+    config = load_config()
+    guard_config = config.get("guard_mode", {})
+
+    # Settings Card
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("System Status")
+    
+    is_enabled = guard_config.get("enabled", False)
+    st.write(f"Current Mode: {'**Guard Mode ON**' if is_enabled else '**Standard Mode**'}")
+    st.write(f"Work Hours: {guard_config.get('work_hours', {}).get('start')} - {guard_config.get('work_hours', {}).get('end')}")
+    st.write(f"Grace Period: {guard_config.get('grace_period_minutes')} minutes")
+    
+    st.info("To toggle Guard Mode, edit `config.yaml` and restart the camera process.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Exception Management Card
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Employee Exceptions (Leave / Business)")
+    
+    face_db = get_face_database()
+    exception_mgr = ExceptionManager(db_path=str(ROOT / guard_config["exception_db"]))
+    
+    all_employees = face_db.get_all_employees()
+    emp_names = [e["name"] for e in all_employees]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        emp_name = st.selectbox("Select Employee", emp_names)
+        exc_type = st.selectbox("Type", ["leave", "business"])
+    with col2:
+        start_dt = st.date_input("Start Date")
+        end_dt = st.date_input("End Date")
+    
+    reason = st.text_area("Reason (Optional)")
+
+    if st.button("Submit Exception", type="primary", use_container_width=True):
+        if not emp_name:
+            st.error("Please select an employee.")
+        else:
+            start_str = f"{start_dt} {guard_config.get('work_hours', {}).get('start', '09:00')}:00"
+            end_str = f"{end_dt} {guard_config.get('work_hours', {}).get('end', '18:00')}:00"
+            
+            exception_mgr.add_exception(
+                employee_id=emp_name,
+                exception_type=exc_type,
+                start_time=start_str,
+                end_time=end_str,
+                reason=reason
+            )
+            st.success(f"Exception added for {emp_name} from {start_str} to {end_str}")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Active Exceptions Table
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Active & Pending Exceptions")
+    
+    exceptions = exception_mgr.get_all_exceptions(limit=50)
+    if exceptions:
+        df = pd.DataFrame(exceptions)
+        df = df[["employee_id", "type", "start_time", "end_time", "status", "reason"]]
+        df = df.rename(columns={
+            "employee_id": "Employee",
+            "type": "Type",
+            "start_time": "From",
+            "end_time": "To",
+            "status": "Status",
+            "reason": "Reason"
+        })
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("No exceptions currently recorded.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
 def main():
     """Main entry point for the Streamlit app."""
     st.set_page_config(
@@ -431,7 +512,7 @@ def main():
 
     page = st.sidebar.radio(
         "Navigation",
-        ["Dashboard", "Register Employee", "Reports", "Live Camera"],
+        ["Dashboard", "Register Employee", "Reports", "Live Camera", "🛡️ Guard Mode"],
     )
     
     st.divider()
@@ -444,6 +525,8 @@ def main():
         page_reports()
     elif page == "Live Camera":
         page_live_camera()
+    elif page == "🛡️ Guard Mode":
+        page_guard_mode()
 
 
 if __name__ == "__main__":

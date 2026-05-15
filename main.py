@@ -2,7 +2,6 @@
 
 import sys
 import time
-import threading
 from pathlib import Path
 
 import cv2
@@ -15,6 +14,8 @@ from src.config import get_project_root, load_config
 from src.detector import Detector, ZoneChecker
 from src.face_db import FaceDatabase
 from src.face_recognizer import FaceRecognizer
+from src.exception_manager import ExceptionManager
+from src.guard_engine import GuardEngine, GuardStatus
 
 
 def setup_logging(config: dict) -> None:
@@ -53,6 +54,10 @@ def run_pipeline() -> None:
         cooldown_seconds=config["attendance"]["cooldown_seconds"],
     )
 
+    # Guard Mode Components
+    guard_engine = GuardEngine(config)
+    exception_manager = ExceptionManager(db_path=str(root / config["guard_mode"]["exception_db"]))
+
     # Zone setup (default: center 60% of frame)
     zone_points = config["zones"]["checkin"]["points"]
     if not zone_points:
@@ -73,7 +78,7 @@ def run_pipeline() -> None:
     face_check_interval = 3
     frame_count = 0
 
-    # Multi-person status messages: list of {"text": str, "expires_at": float, "y_pos": int}
+    # Multi-person status messages: list of {"text": str, "color": tuple, "expires_at": float, "y_pos": int}
     active_messages: list[dict] = []
 
     # FPS tracking
@@ -143,21 +148,25 @@ def run_pipeline() -> None:
                         logger.info(f"Detected: {name} (track_id={track_id})")
                         result = att_logger.log(name, "checkin", confidence=float(1.0 - config["face_recognition"]["match_threshold"]))
                         
-                        # Create status message
-                        status_text = ""
-                        is_success = False
-                        
-                        if result["status"] == "logged":
-                            logger.success(f"Check-in logged: {name} at {result['timestamp']}")
-                            status_text = f"{name} - 打卡成功!"
-                            is_success = True
-                        else:
-                            status_text = f"{name} - 偵測中 (冷卻中)"
+                        # Check cooldown status
+                        is_cooldown = (result["status"] != "logged")
+
+                        # Check exception status if guard mode is enabled
+                        is_exempted = False
+                        if guard_engine.enabled:
+                            is_exempted = exception_manager.is_exempted(name)
+
+                        # Determine status via Guard Engine
+                        status_obj = guard_engine.get_status(
+                            name=name,
+                            is_cooldown=is_cooldown,
+                            is_exempted=is_exempted
+                        )
 
                         # Add to active messages
-                        # Calculate y_pos to avoid overlap
-                        # Filter expired first
                         current_time = time.time()
+                        
+                        # Filter expired first
                         active_messages = [m for m in active_messages if m["expires_at"] > current_time]
                         
                         # Assign Y position based on stack
@@ -166,10 +175,11 @@ def run_pipeline() -> None:
                             y_pos = existing["y_pos"] + 60  # Vertical spacing
                         
                         active_messages.append({
-                            "text": status_text,
+                            "text": status_obj.message,
+                            "color": status_obj.color,
                             "expires_at": current_time + 5.0,  # Show for 5 seconds
                             "y_pos": y_pos,
-                            "is_success": is_success
+                            "is_success": not status_obj.is_abnormal
                         })
                         
                         attempted_ids[track_id] = time.time()
@@ -199,7 +209,7 @@ def run_pipeline() -> None:
 
             # Draw persistent status messages (multi-person support)
             if active_messages:
-                # Filter out expired messages
+                # Filter out expired messages (refresh)
                 current_time = time.time()
                 active_messages = [
                     msg for msg in active_messages
@@ -221,7 +231,8 @@ def run_pipeline() -> None:
                 for msg in active_messages:
                     text = msg["text"]
                     y_pos = msg["y_pos"]
-                    is_success = msg.get("is_success", True)
+                    # Color comes from status_obj (RGB)
+                    border_color = msg.get("color", (0, 255, 0))
                     
                     # Calculate text bounding box
                     bbox = draw.textbbox((0, 0), text, font=font)
@@ -230,9 +241,6 @@ def run_pipeline() -> None:
 
                     box_x2 = x_start + text_w + padding * 2
                     box_y2 = y_pos + text_h + padding * 2
-
-                    # Color based on status (Success vs Cooldown)
-                    border_color = (0, 255, 0) if is_success else (255, 165, 0)  # Green or Orange
 
                     draw.rectangle([x_start, y_pos, box_x2, box_y2], fill=(0, 0, 0))
                     draw.rectangle([x_start, y_pos, box_x2, box_y2], outline=border_color, width=2)
