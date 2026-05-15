@@ -1,8 +1,8 @@
 """Streamlit UI for the AI Face Attendance System.
 
-Provides 4 pages: Dashboard, Register Employee, Reports, Live Camera.
+Provides 5 pages: Dashboard, Register Employee, Reports, Live Camera, Guard Mode.
 Uses st.cache_resource for heavy model/database objects.
-Designed with Linear-style Dark Mode theme.
+Designed with Linear-style Dark Mode theme and Bilingual (EN/ZH) support.
 """
 
 import sys
@@ -22,6 +22,7 @@ from src.face_db import FaceDatabase
 from src.attendance_logger import AttendanceLogger
 from src.face_recognizer import FaceRecognizer
 from src.exception_manager import ExceptionManager
+import src.i18n as T
 
 ROOT = get_project_root()
 
@@ -209,8 +210,8 @@ def format_timestamp(ts_str: str) -> str:
 def page_dashboard():
     """Dashboard: today's attendance records + summary statistics."""
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.title("📊 Attendance Dashboard")
-    st.caption(f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+    st.title(T._("dash_title"))
+    st.caption(f"{T._('dash_date')}: {datetime.now().strftime('%Y-%m-%d')}")
     st.markdown('</div>', unsafe_allow_html=True)
 
     att_logger = get_attendance_logger()
@@ -226,87 +227,85 @@ def page_dashboard():
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.metric("Total Check-ins", len(checkins))
+        st.metric(T._("dash_total_checkins"), len(checkins))
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.metric("Total Check-outs", len(checkouts))
+        st.metric(T._("dash_total_checkouts"), len(checkouts))
         st.markdown('</div>', unsafe_allow_html=True)
     with col3:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.metric("Unique Employees Today", len(unique_today))
+        st.metric(T._("dash_unique_today"), len(unique_today))
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("👥 Registered Employees")
-    st.caption(f"Total registered: {len(employees)}")
+    st.subheader(T._("dash_registered_emp"))
+    st.caption(f"{T._('dash_total_registered')}: {len(employees)}")
     if employees:
         emp_df = pd.DataFrame(employees)
         st.dataframe(emp_df, use_container_width=True)
     else:
-        st.info("No employees registered yet. Go to Register Employee to add someone.")
+        st.info(T._("dash_no_emp_registered"))
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("🕒 Today's Records")
+    st.subheader(T._("dash_today_records"))
     if records:
         df = pd.DataFrame(records)
         df["timestamp"] = df["timestamp"].apply(format_timestamp)
         df = df.rename(columns={
-            "employee": "Employee",
-            "event": "Event",
-            "timestamp": "Time",
-            "confidence": "Confidence",
+            "employee": T._("col_employee"),
+            "event": T._("col_event"),
+            "timestamp": T._("col_time"),
+            "confidence": T._("col_confidence"),
         })
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("No attendance records for today yet.")
+        st.info(T._("dash_no_records_today"))
     st.markdown('</div>', unsafe_allow_html=True)
 
 
 def page_register():
     """Register Employee: upload photo or use camera, extract embedding, save."""
-    # Create a "Card" effect for the form
     st.markdown('<div class="card">', unsafe_allow_html=True)
     
-    st.title("🆔 Employee Registration")
-    st.caption("Add a new employee to the face database.")
+    st.title(T._("reg_title"))
+    st.caption(T._("reg_caption"))
     
     face_rec = get_face_recognizer()
     face_db = get_face_database()
 
     col1, col2 = st.columns(2)
     with col1:
-        name = st.text_input("Employee Name", placeholder="e.g. Bruce")
+        name = st.text_input(T._("reg_name"), placeholder=T._("reg_placeholder_name"))
     with col2:
-        employee_id = st.text_input("Employee ID", placeholder="e.g. EMP001")
+        employee_id = st.text_input(T._("reg_id"), placeholder=T._("reg_placeholder_id"))
 
-    tab_upload, tab_camera = st.tabs(["Upload Photo", "Take Photo"])
+    tab_upload, tab_camera = st.tabs([T._("reg_tab_upload"), T._("reg_tab_camera")])
 
     with tab_upload:
         uploaded_file = st.file_uploader(
-            "Upload a clear face photo",
+            T._("reg_upload_label"),
             type=["jpg", "jpeg", "png"],
         )
         if uploaded_file is not None:
             file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
             frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
             if frame is not None:
-                st.image(frame, channels="BGR", caption="Uploaded photo")
-                if st.button("Register from Upload", type="primary", use_container_width=True):
+                st.image(frame, channels="BGR", caption=T._("reg_tab_upload"))
+                if st.button(T._("reg_btn_upload"), type="primary", use_container_width=True):
                     _process_registration(name, employee_id, frame, face_rec, face_db)
 
     with tab_camera:
-        st.caption("Ensure good lighting and remove masks/sunglasses.")
-        camera_img = st.camera_input("Take a photo")
+        st.caption(T._("reg_camera_caption"))
+        camera_img = st.camera_input(T._("reg_tab_camera"))
         if camera_img is not None:
             file_bytes = np.frombuffer(camera_img.read(), np.uint8)
             frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
             if frame is not None:
-                # Flip horizontally to match main.py behavior (non-mirror mode)
                 frame = cv2.flip(frame, 1)
-                st.image(frame, channels="BGR", caption="Captured photo")
-                if st.button("Register from Camera", type="primary", use_container_width=True):
+                st.image(frame, channels="BGR", caption=T._("reg_tab_camera"))
+                if st.button(T._("reg_btn_camera"), type="primary", use_container_width=True):
                     _process_registration(name, employee_id, frame, face_rec, face_db)
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -315,62 +314,62 @@ def page_register():
 def _process_registration(name, employee_id, frame, face_rec, face_db):
     """Extract face embedding and register employee."""
     if not name or not employee_id:
-        st.error("Please provide both name and employee ID.")
+        st.error(T._("reg_error_fields"))
         return
 
     embedding = face_rec.register_from_frame(frame, name)
     if embedding is None:
-        st.error(
-            "Could not detect exactly one face in the image. "
-            "Please upload a clear photo with a single face."
-        )
+        st.error(T._("reg_error_face"))
         return
 
     face_db.register(name, employee_id, embedding)
-    st.success(f"Employee '{name}' ({employee_id}) registered successfully!")
+    st.success(f"{T._('reg_name')} '{name}' ({employee_id}) {T._('reg_success')}")
 
 
 def page_reports():
     """Reports: view all attendance records, filter, export CSV."""
-    st.title("Attendance Reports")
+    st.title(T._("rep_title"))
 
     att_logger = get_attendance_logger()
     records = att_logger.get_all_records()
 
     if not records:
-        st.info("No attendance records found.")
+        st.info(T._("rep_no_records"))
         return
 
     df = pd.DataFrame(records)
     df["timestamp"] = df["timestamp"].apply(format_timestamp)
 
-    st.subheader("Filters")
+    st.subheader(T._("rep_filters"))
     col1, col2 = st.columns(2)
     with col1:
         all_employees = sorted(set(r["employee"] for r in records))
-        selected_emp = st.selectbox("Employee", ["All"] + all_employees)
+        selected_emp = st.selectbox(T._("rep_filter_emp"), [T._("rep_all")] + all_employees)
     with col2:
-        event_type = st.selectbox("Event Type", ["All", "checkin", "checkout"])
+        event_type = st.selectbox(T._("rep_filter_event"), [T._("rep_all"), "checkin", "checkout"])
 
     filtered = df.copy()
-    if selected_emp != "All":
+    emp_label = T._("rep_filter_emp")
+    evt_label = T._("rep_filter_event")
+    
+    if selected_emp != T._("rep_all"):
         filtered = filtered[filtered["employee"] == selected_emp]
-    if event_type != "All":
+    if event_type != T._("rep_all"):
         filtered = filtered[filtered["event"] == event_type]
 
-    st.subheader(f"Showing {len(filtered)} records")
+    st.subheader(f"{T._('rep_showing')} {len(filtered)} {T._('rep_records')}")
     display_df = filtered.rename(columns={
-        "employee": "Employee",
-        "event": "Event",
-        "timestamp": "Time",
-        "confidence": "Confidence",
+        "employee": T._("col_employee"),
+        "event": T._("col_event"),
+        "timestamp": T._("col_time"),
+        "confidence": T._("col_confidence"),
     })
     st.dataframe(display_df, use_container_width=True)
 
-    st.subheader("Export")
+    st.subheader(T._("rep_export"))
     csv_data = filtered.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label="Download CSV",
+        label=T._("rep_btn_download"),
         data=csv_data,
         file_name=f"attendance_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv",
@@ -379,61 +378,57 @@ def page_reports():
 
 def page_live_camera():
     """Live Camera: preview camera feed using Streamlit's camera_input."""
-    st.title("Live Camera Preview")
-    st.info(
-        "Use your webcam to preview the camera feed. "
-        "For real-time attendance tracking, run `python main.py` from the project root."
-    )
+    st.title(T._("cam_title"))
+    st.info(T._("cam_info"))
 
     config = load_config()
     camera_source = config["camera"]["source"]
-    st.write(f"Camera source: {camera_source}")
+    st.write(f"{T._('cam_source')}: {camera_source}")
 
-    camera_img = st.camera_input("Take a snapshot")
+    camera_img = st.camera_input(T._("cam_snapshot"))
     if camera_img is not None:
         file_bytes = np.frombuffer(camera_img.read(), np.uint8)
         frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
         if frame is not None:
-            # Flip horizontally to match main.py behavior (non-mirror mode)
             frame = cv2.flip(frame, 1)
-            st.image(frame, channels="BGR", caption="Camera preview")
+            st.image(frame, channels="BGR", caption=T._("cam_caption"))
             st.write(f"Frame size: {frame.shape[1]}x{frame.shape[0]}")
 
             face_rec = get_face_recognizer()
-            with st.spinner("Detecting faces..."):
+            with st.spinner(T._("cam_detecting")):
                 faces = face_rec.detect_faces(frame)
             if faces:
-                st.success(f"Detected {len(faces)} face(s)")
+                st.success(f"{T._('cam_detected')} {len(faces)} {T._('cam_face_s')}")
                 for i, face in enumerate(faces):
                     bbox = face["bbox"]
                     st.write(f"Face {i+1}: bbox=({bbox[0]:.0f}, {bbox[1]:.0f}, {bbox[2]:.0f}, {bbox[3]:.0f})")
             else:
-                st.warning("No faces detected in the frame.")
+                st.warning(T._("cam_no_face"))
 
 
 def page_guard_mode():
     """Guard Mode: Manage access control rules and employee exceptions."""
-    st.title("🛡️ Access Control & Exceptions")
-    st.caption("Manage work hours, leave requests, and business trips.")
+    st.title(T._("guard_title"))
+    st.caption(T._("guard_caption"))
 
     config = load_config()
     guard_config = config.get("guard_mode", {})
 
     # Settings Card
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("System Status")
+    st.subheader(T._("guard_status"))
     
     is_enabled = guard_config.get("enabled", False)
-    st.write(f"Current Mode: {'**Guard Mode ON**' if is_enabled else '**Standard Mode**'}")
-    st.write(f"Work Hours: {guard_config.get('work_hours', {}).get('start')} - {guard_config.get('work_hours', {}).get('end')}")
-    st.write(f"Grace Period: {guard_config.get('grace_period_minutes')} minutes")
+    st.write(T._("guard_mode_on") if is_enabled else T._("guard_mode_off"))
+    st.write(f"{T._('guard_work_hours')}: {guard_config.get('work_hours', {}).get('start')} - {guard_config.get('work_hours', {}).get('end')}")
+    st.write(f"{T._('guard_grace')}: {guard_config.get('grace_period_minutes')} minutes")
     
-    st.info("To toggle Guard Mode, edit `config.yaml` and restart the camera process.")
+    st.info(T._("guard_info_toggle"))
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Exception Management Card
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("Employee Exceptions (Leave / Business)")
+    st.subheader(T._("guard_exc_title"))
     
     face_db = get_face_database()
     exception_mgr = ExceptionManager(db_path=str(ROOT / guard_config["exception_db"]))
@@ -443,58 +438,64 @@ def page_guard_mode():
 
     col1, col2 = st.columns(2)
     with col1:
-        emp_name = st.selectbox("Select Employee", emp_names)
-        exc_type = st.selectbox("Type", ["leave", "business"])
+        emp_name = st.selectbox(T._("guard_sel_emp"), emp_names)
+        exc_type = st.selectbox(
+            T._("guard_type"), 
+            [T._("guard_type_leave"), T._("guard_type_business")],
+            format_func=lambda x: x
+        )
+        # Map translated type back to database key
+        type_key = "leave" if exc_type == T._("guard_type_leave") else "business"
     with col2:
-        start_dt = st.date_input("Start Date")
-        end_dt = st.date_input("End Date")
+        start_dt = st.date_input(T._("guard_start"))
+        end_dt = st.date_input(T._("guard_end"))
     
-    reason = st.text_area("Reason (Optional)")
+    reason = st.text_area(T._("guard_reason"))
 
-    if st.button("Submit Exception", type="primary", use_container_width=True):
+    if st.button(T._("guard_btn_submit"), type="primary", use_container_width=True):
         if not emp_name:
-            st.error("Please select an employee.")
+            st.error(T._("guard_err_emp"))
         else:
             start_str = f"{start_dt} {guard_config.get('work_hours', {}).get('start', '09:00')}:00"
             end_str = f"{end_dt} {guard_config.get('work_hours', {}).get('end', '18:00')}:00"
             
             exception_mgr.add_exception(
                 employee_id=emp_name,
-                exception_type=exc_type,
+                exception_type=type_key,
                 start_time=start_str,
                 end_time=end_str,
                 reason=reason
             )
-            st.success(f"Exception added for {emp_name} from {start_str} to {end_str}")
+            st.success(f"{T._('guard_success_exc')} {emp_name} {T._('guard_success_exc_to')} {start_str} {T._('guard_success_exc_to')} {end_str}")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Active Exceptions Table
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("Active & Pending Exceptions")
+    st.subheader(T._("guard_exc_list"))
     
     exceptions = exception_mgr.get_all_exceptions(limit=50)
     if exceptions:
         df = pd.DataFrame(exceptions)
         df = df[["employee_id", "type", "start_time", "end_time", "status", "reason"]]
         df = df.rename(columns={
-            "employee_id": "Employee",
-            "type": "Type",
-            "start_time": "From",
-            "end_time": "To",
-            "status": "Status",
-            "reason": "Reason"
+            "employee_id": T._("col_employee"),
+            "type": T._("guard_type"),
+            "start_time": T._("col_from"),
+            "end_time": T._("col_to"),
+            "status": T._("col_status"),
+            "reason": T._("col_reason")
         })
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("No exceptions currently recorded.")
+        st.info(T._("guard_no_exc"))
     st.markdown('</div>', unsafe_allow_html=True)
 
 
 def main():
     """Main entry point for the Streamlit app."""
     st.set_page_config(
-        page_title="Face Attendance System",
+        page_title=T._("sidebar_title"),
         page_icon="👤",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -503,29 +504,50 @@ def main():
     # Apply the Linear-style Dark Mode design
     set_page_design()
 
+    # Language State Management
+    if "language" not in st.session_state:
+        st.session_state.language = "zh"
+
     # Sidebar Navigation
     with st.sidebar:
         st.image("https://img.icons8.com/ios-filled/50/8b5cf6/fingerprint.png", width=50)
-        st.title("AI Attendance")
-        st.caption("v1.0.0 | Powered by InsightFace")
+        st.title(T._("sidebar_title"))
+        st.caption(T._("sidebar_caption"))
         st.divider()
 
+        # Language Selector
+        lang_option = st.radio(
+            T._("lang_label"),
+            ["繁體中文", "English"],
+            index=0 if st.session_state.language == "zh" else 1,
+            key="lang_selector"
+        )
+        
+        if lang_option == "English" and st.session_state.language != "en":
+            st.session_state.language = "en"
+            st.rerun()
+        elif lang_option == "繁體中文" and st.session_state.language != "zh":
+            st.session_state.language = "zh"
+            st.rerun()
+        
+        T.set_language(st.session_state.language)
+
     page = st.sidebar.radio(
-        "Navigation",
-        ["Dashboard", "Register Employee", "Reports", "Live Camera", "🛡️ Guard Mode"],
+        T._("nav_label"),
+        [T._("nav_dashboard"), T._("nav_register"), T._("nav_reports"), T._("nav_camera"), T._("nav_guard")],
     )
     
     st.divider()
 
-    if page == "Dashboard":
+    if page == T._("nav_dashboard"):
         page_dashboard()
-    elif page == "Register Employee":
+    elif page == T._("nav_register"):
         page_register()
-    elif page == "Reports":
+    elif page == T._("nav_reports"):
         page_reports()
-    elif page == "Live Camera":
+    elif page == T._("nav_camera"):
         page_live_camera()
-    elif page == "🛡️ Guard Mode":
+    elif page == T._("nav_guard"):
         page_guard_mode()
 
 
