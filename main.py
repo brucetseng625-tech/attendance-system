@@ -83,18 +83,24 @@ def run_pipeline() -> None:
                 logger.warning("Failed to read frame")
                 break
 
+            # Flip frame horizontally (non-mirror mode, like a real mirror)
+            frame = cv2.flip(frame, 1)
+
             frame_count += 1
 
             # Detection + tracking
             detections = detector.detect_and_track(frame)
             inside_ids = zone_checker.check_detections(detections, frame.shape)
 
+            # Status message to display on video
+            status_msg = ""
+
             # Face recognition for people in zone (throttled)
             if frame_count % face_check_interval == 0:
                 for track_id in inside_ids:
                     if track_id in attempted_ids:
                         elapsed = time.time() - attempted_ids[track_id]
-                        if elapsed < 10:
+                        if elapsed < 10:  # 10s cooldown per track
                             continue
 
                     # Find detection bounding box for this track
@@ -120,16 +126,24 @@ def run_pipeline() -> None:
 
                     # Match against database
                     embedding = faces[0]["embedding"]
-                    threshold = config["face_recognition"]["match_threshold"]
-                    name = face_db.match(embedding, threshold=threshold)
+                    name = face_db.match(embedding, threshold=config["face_recognition"]["match_threshold"])
 
                     if name:
                         logger.info(f"Detected: {name} (track_id={track_id})")
-                        confidence = float(1.0 - threshold)
-                        result = att_logger.log(name, "checkin", confidence=confidence)
+                        result = att_logger.log(name, "checkin", confidence=float(1.0 - config["face_recognition"]["match_threshold"]))
                         if result["status"] == "logged":
                             logger.success(f"Check-in logged: {name} at {result['timestamp']}")
+                            status_msg = f"{name} - 打卡成功!"
+                        else:
+                            status_msg = f"{name} - 偵測中 (冷卻中)"
                         attempted_ids[track_id] = time.time()
+
+            # Draw status message on video
+            if status_msg:
+                # Background for text
+                (w, h), _ = cv2.getTextSize(status_msg, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
+                cv2.rectangle(frame, (10, 40), (w + 20, 40 + h + 20), (0, 0, 0), -1)
+                cv2.putText(frame, status_msg, (15, 40 + h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
             # Draw zone polygon
             h, w = frame.shape[:2]
