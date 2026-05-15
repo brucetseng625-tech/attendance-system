@@ -17,6 +17,11 @@ streamlit>=1.30.0
 # Utilities
 loguru>=0.7.0
 pandas>=2.0.0
+pillow>=10.0.0
+
+# API Server (for ERP Integration)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
 
 # Testing
 pytest>=7.0.0

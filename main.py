@@ -2,10 +2,12 @@
 
 import sys
 import time
+import threading
 from pathlib import Path
 
 import cv2
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 
 from src.attendance_logger import AttendanceLogger
@@ -71,14 +73,22 @@ def run_pipeline() -> None:
     face_check_interval = 3
     frame_count = 0
 
-    # Persistent status message state
-    current_status_msg = ""
-    status_msg_expiry = 0.0
+    # Multi-person status messages: list of {"text": str, "expires_at": float, "y_pos": int}
+    active_messages: list[dict] = []
 
     # FPS tracking
     fps_start = time.time()
     fps_frame_count = 0
     fps_value = 0.0
+
+    # Font configuration (macOS standard Chinese font)
+    font_path = "/System/Library/Fonts/STHeiti Medium.ttc"
+    font_size = 28
+    try:
+        font = ImageFont.truetype(font_path, font_size)
+    except IOError:
+        logger.warning("Could not load Chinese font, falling back to default")
+        font = ImageFont.load_default()
 
     try:
         while True:
@@ -132,13 +142,36 @@ def run_pipeline() -> None:
                     if name:
                         logger.info(f"Detected: {name} (track_id={track_id})")
                         result = att_logger.log(name, "checkin", confidence=float(1.0 - config["face_recognition"]["match_threshold"]))
+                        
+                        # Create status message
+                        status_text = ""
+                        is_success = False
+                        
                         if result["status"] == "logged":
                             logger.success(f"Check-in logged: {name} at {result['timestamp']}")
-                            current_status_msg = f"{name} - 打卡成功!"
+                            status_text = f"{name} - 打卡成功!"
+                            is_success = True
                         else:
-                            current_status_msg = f"{name} - 偵測中 (冷卻中)"
-                        # Persist message for 3 seconds
-                        status_msg_expiry = time.time() + 3.0
+                            status_text = f"{name} - 偵測中 (冷卻中)"
+
+                        # Add to active messages
+                        # Calculate y_pos to avoid overlap
+                        # Filter expired first
+                        current_time = time.time()
+                        active_messages = [m for m in active_messages if m["expires_at"] > current_time]
+                        
+                        # Assign Y position based on stack
+                        y_pos = 50
+                        for existing in sorted(active_messages, key=lambda m: m["y_pos"]):
+                            y_pos = existing["y_pos"] + 60  # Vertical spacing
+                        
+                        active_messages.append({
+                            "text": status_text,
+                            "expires_at": current_time + 5.0,  # Show for 5 seconds
+                            "y_pos": y_pos,
+                            "is_success": is_success
+                        })
+                        
                         attempted_ids[track_id] = time.time()
 
             # Draw zone polygon
@@ -164,13 +197,51 @@ def run_pipeline() -> None:
                 fps_start = time.time()
             cv2.putText(frame, f"FPS: {fps_value:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-            # Draw persistent status message (on top)
-            if time.time() < status_msg_expiry:
-                (w, h), _ = cv2.getTextSize(current_status_msg, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                # Draw background
-                cv2.rectangle(frame, (10, 50), (w + 20, 50 + h + 20), (0, 0, 0), -1)
-                cv2.rectangle(frame, (10, 50), (w + 20, 50 + h + 20), (0, 255, 0), 2)
-                cv2.putText(frame, current_status_msg, (15, 50 + h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            # Draw persistent status messages (multi-person support)
+            if active_messages:
+                # Filter out expired messages
+                current_time = time.time()
+                active_messages = [
+                    msg for msg in active_messages
+                    if msg["expires_at"] > current_time
+                ]
+                
+                # Sort by y_pos to draw top to bottom
+                active_messages.sort(key=lambda m: m["y_pos"])
+
+                # Convert frame once for PIL
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                pil_frame = Image.fromarray(frame_rgb)
+                draw = ImageDraw.Draw(pil_frame)
+
+                # Draw each message
+                x_start = 10
+                padding = 10
+
+                for msg in active_messages:
+                    text = msg["text"]
+                    y_pos = msg["y_pos"]
+                    is_success = msg.get("is_success", True)
+                    
+                    # Calculate text bounding box
+                    bbox = draw.textbbox((0, 0), text, font=font)
+                    text_w = bbox[2] - bbox[0]
+                    text_h = bbox[3] - bbox[1]
+
+                    box_x2 = x_start + text_w + padding * 2
+                    box_y2 = y_pos + text_h + padding * 2
+
+                    # Color based on status (Success vs Cooldown)
+                    border_color = (0, 255, 0) if is_success else (255, 165, 0)  # Green or Orange
+
+                    draw.rectangle([x_start, y_pos, box_x2, box_y2], fill=(0, 0, 0))
+                    draw.rectangle([x_start, y_pos, box_x2, box_y2], outline=border_color, width=2)
+
+                    # Draw text
+                    draw.text((x_start + padding, y_pos + padding), text, fill=border_color, font=font)
+
+                # Convert back to OpenCV format
+                frame = cv2.cvtColor(np.array(pil_frame), cv2.COLOR_RGB2BGR)
 
             cv2.imshow("Attendance System", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
