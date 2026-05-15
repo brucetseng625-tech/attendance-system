@@ -23,6 +23,7 @@ from src.face_db import FaceDatabase
 from src.attendance_logger import AttendanceLogger
 from src.face_recognizer import FaceRecognizer
 from src.exception_manager import ExceptionManager
+from src.user_manager import UserManager
 import src.i18n as T
 
 ROOT = get_project_root()
@@ -179,7 +180,11 @@ def page_login():
                 pw = st.text_input(T._("emp_password"), type="password", key="emp_pw_input", placeholder="Enter password")
                 
                 if st.button(T._("btn_enter"), type="primary", use_container_width=True):
-                    if pw == "1234":  # Default Employee Password
+                    # Check password dynamically
+                    user_mgr = UserManager()
+                    correct_pw = user_mgr.get_password(selected_emp)
+                    
+                    if pw == correct_pw:
                         st.session_state.logged_in = True
                         st.session_state.role = "employee"
                         st.session_state.current_employee = selected_emp
@@ -339,6 +344,34 @@ def page_settings():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # --- User Password Management ---
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("👥 Employee Password Management")
+    
+    face_db = get_face_database()
+    employees = face_db.get_all_employees()
+    emp_names = [e["name"] for e in employees]
+    
+    user_mgr = UserManager()
+    
+    if emp_names:
+        c1, c2 = st.columns(2)
+        with c1:
+            target_emp = st.selectbox("Select Employee", emp_names)
+        with c2:
+            new_admin_pw = st.text_input("Set New Password", type="password")
+            
+        if st.button("Reset Password", type="primary", use_container_width=True):
+            if new_admin_pw:
+                user_mgr.set_password(target_emp, new_admin_pw)
+                st.success(f"Password for '{target_emp}' has been reset.")
+            else:
+                st.error("Please enter a new password.")
+    else:
+        st.info("No employees registered yet.")
+        
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 # =============================================================================
 # PAGE: APPROVALS (Admin Only)
@@ -388,56 +421,86 @@ def page_employee_portal():
         return
 
     emp_name = st.session_state.current_employee
-    st.subheader(f"👋 Hello, {emp_name}")
     
-    # Config for hours
-    config = load_config()
-    guard_config = config.get("guard_mode", {})
-    
-    # Form
-    c1, c2 = st.columns(2)
-    with c1:
-        exc_type = st.selectbox(T._("guard_type"), [T._("guard_type_leave"), T._("guard_type_business")])
-    with c2:
-        start_dt = st.date_input(T._("guard_start"))
-        end_dt = st.date_input(T._("guard_end"))
-    
-    reason = st.text_area(T._("guard_reason"))
-    
-    if st.button("Submit Request", type="primary", use_container_width=True):
-        type_key = "leave" if exc_type == T._("guard_type_leave") else "business"
-        start_str = f"{start_dt} {guard_config.get('work_hours', {}).get('start', '09:00')}:00"
-        end_str = f"{end_dt} {guard_config.get('work_hours', {}).get('end', '18:00')}:00"
+    # Tabs for Request vs Password Change
+    tab_req, tab_pw = st.tabs([T._("portal_title"), T._("change_password")])
+
+    with tab_req:
+        st.subheader(f"👋 Hello, {emp_name}")
         
+        # Config for hours
+        config = load_config()
+        guard_config = config.get("guard_mode", {})
+        
+        # Success Message Handling
+        if st.session_state.get("request_submitted"):
+            st.success("✅ Request Submitted Successfully!")
+            st.session_state.request_submitted = False
+
+        # Form with Date AND Time
+        c1, c2 = st.columns(2)
+        with c1:
+            exc_type = st.selectbox(T._("guard_type"), [T._("guard_type_leave"), T._("guard_type_business")])
+            start_dt = st.date_input(T._("guard_start"))
+            start_tm = st.time_input(T._("start_time"), value=datetime.strptime("09:00", "%H:%M").time())
+        with c2:
+            end_dt = st.date_input(T._("guard_end"))
+            end_tm = st.time_input(T._("end_time"), value=datetime.strptime("18:00", "%H:%M").time())
+        
+        reason = st.text_area(T._("guard_reason"))
+        
+        if st.button("Submit Request", type="primary", use_container_width=True):
+            type_key = "leave" if exc_type == T._("guard_type_leave") else "business"
+            # Combine date and time
+            start_str = f"{start_dt} {start_tm.strftime('%H:%M')}"
+            end_str = f"{end_dt} {end_tm.strftime('%H:%M')}"
+            
+            exc_mgr = get_exception_manager()
+            exc_mgr.add_exception(
+                employee_id=emp_name,
+                exception_type=type_key,
+                start_time=start_str,
+                end_time=end_str,
+                reason=reason,
+                status="pending"
+            )
+            st.session_state.request_submitted = True
+            st.rerun()
+        
+        # History
+        st.subheader(T._("my_requests"))
         exc_mgr = get_exception_manager()
-        exc_mgr.add_exception(
-            employee_id=emp_name,
-            exception_type=type_key,
-            start_time=start_str,
-            end_time=end_str,
-            reason=reason,
-            status="pending"
-        )
-        st.success(T._("submit_success"))
-        st.rerun()
-    
-    # History
-    st.subheader(T._("my_requests"))
-    exc_mgr = get_exception_manager()
-    history = exc_mgr.get_exceptions_by_employee(emp_name)
-    
-    if history:
-        df = pd.DataFrame(history)
-        df = df.rename(columns={
-            "type": T._("guard_type"),
-            "start_time": T._("col_from"),
-            "end_time": T._("col_to"),
-            "status": T._("col_status"),
-            "reason": T._("col_reason")
-        })
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.info(T._("history_empty"))
+        history = exc_mgr.get_exceptions_by_employee(emp_name)
+        
+        if history:
+            df = pd.DataFrame(history)
+            df = df.rename(columns={
+                "type": T._("guard_type"),
+                "start_time": T._("col_from"),
+                "end_time": T._("col_to"),
+                "status": T._("col_status"),
+                "reason": T._("col_reason")
+            })
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.info(T._("history_empty"))
+
+    with tab_pw:
+        st.subheader(T._("change_password"))
+        user_mgr = UserManager()
+        
+        new_pw = st.text_input(T._("new_password"), type="password", key="new_pw_emp")
+        confirm_pw = st.text_input(T._("confirm_password"), type="password", key="confirm_pw_emp")
+        
+        if st.button(T._("btn_change_pw"), type="primary", use_container_width=True):
+            if new_pw != confirm_pw:
+                st.error(T._("pw_mismatch"))
+            elif not new_pw:
+                st.error(T._("wrong_pw")) # generic error for empty
+            else:
+                user_mgr.set_password(emp_name, new_pw)
+                st.success(T._("pw_updated"))
+
 # =============================================================================
 # MAIN APP
 # =============================================================================

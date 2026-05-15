@@ -137,6 +137,16 @@ TRANSLATIONS = {
     "select_emp": {"en": "Select Your Name", "zh": "選擇您的姓名"},
     "emp_password": {"en": "Employee Password", "zh": "員工密碼"},
     "emp_default_pw": {"en": "Default: 1234", "zh": "預設：1234"},
+    
+    # Time & Password
+    "start_time": {"en": "Start Time", "zh": "開始時間"},
+    "end_time": {"en": "End Time", "zh": "結束時間"},
+    "change_password": {"en": "🔐 Change Password", "zh": "🔐 修改密碼"},
+    "new_password": {"en": "New Password", "zh": "新密碼"},
+    "confirm_password": {"en": "Confirm Password", "zh": "確認密碼"},
+    "btn_change_pw": {"en": "Update Password", "zh": "更新密碼"},
+    "pw_updated": {"en": "Password updated!", "zh": "密碼已更新！"},
+    "pw_mismatch": {"en": "Passwords do not match", "zh": "兩次密碼不一致"},
 }
 
 # Current language state (default to Traditional Chinese)
