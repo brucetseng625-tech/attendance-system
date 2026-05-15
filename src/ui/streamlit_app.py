@@ -380,7 +380,7 @@ def page_approvals():
 # =============================================================================
 def page_employee_portal():
     st.title(T._("portal_title"))
-    # Removed the card wrapper to fix the black box artifact
+    # Removed card wrapper to fix black box artifact
     
     # Get current employee from session state
     if "current_employee" not in st.session_state:
@@ -438,8 +438,6 @@ def page_employee_portal():
         st.dataframe(df, use_container_width=True)
     else:
         st.info(T._("history_empty"))
-
-
 # =============================================================================
 # MAIN APP
 # =============================================================================
