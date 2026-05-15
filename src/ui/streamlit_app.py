@@ -2,6 +2,7 @@
 
 Provides 4 pages: Dashboard, Register Employee, Reports, Live Camera.
 Uses st.cache_resource for heavy model/database objects.
+Designed with Linear-style Dark Mode theme.
 """
 
 import sys
@@ -22,6 +23,151 @@ from src.attendance_logger import AttendanceLogger
 from src.face_recognizer import FaceRecognizer
 
 ROOT = get_project_root()
+
+
+def set_page_design():
+    """Inject custom CSS for Linear-style Dark Mode design."""
+    st.markdown(
+        """
+        <style>
+        /* --- Global Theme --- */
+        :root {
+            --bg-color: #0f1115;
+            --surface-color: #161a21;
+            --surface-hover: #1c2128;
+            --border-color: #2a2e37;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8b949e;
+            --accent-color: #5e6ad2;
+            --accent-gradient: linear-gradient(135deg, #5e6ad2 0%, #8b5cf6 100%);
+            --danger-color: #d73a49;
+            --success-color: #2ea44f;
+        }
+
+        /* Apply dark theme to body and main containers */
+        .stApp, .stApp > header, .stApp > .main .block-container {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        h1, h2, h3 {
+            color: var(--text-primary) !important;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        p, label, span, div {
+            color: var(--text-secondary) !important;
+        }
+
+        /* --- Sidebar --- */
+        [data-testid="stSidebar"] {
+            background-color: #0b0d10;
+            border-right: 1px solid var(--border-color);
+        }
+        [data-testid="stSidebar"] .stRadio > label {
+            font-weight: 500;
+            color: var(--text-primary) !important;
+        }
+        [data-testid="stSidebar"] .stRadio > div {
+            background-color: transparent !important;
+        }
+        .stRadio > div > label {
+            padding: 0.5rem 0.8rem !important;
+            margin-bottom: 0.2rem !important;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .stRadio > div > label:hover {
+            background-color: var(--surface-hover);
+            color: var(--text-primary) !important;
+        }
+        .stRadio > div > [aria-checked="true"] {
+            background-color: var(--accent-color) !important;
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        /* --- Cards / Containers --- */
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* --- Inputs & Buttons --- */
+        .stTextInput > div > div > input, .stSelectbox > div > div > select {
+            background-color: var(--surface-hover) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+            border-radius: 6px;
+        }
+        .stTextInput > div > div > input:focus {
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 0 2px rgba(94, 106, 210, 0.2);
+        }
+        
+        .stButton > button {
+            background: var(--accent-gradient);
+            color: white !important;
+            border: none !important;
+            border-radius: 6px;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+        .stButton > button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(94, 106, 210, 0.3);
+        }
+        .stButton > button[kind="secondary"] {
+            background: var(--surface-hover) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-secondary) !important;
+        }
+
+        /* --- Metrics & Dataframes --- */
+        [data-testid="stMetricValue"] {
+            color: var(--text-primary) !important;
+            font-size: 2rem !important;
+        }
+        [data-testid="stMetricLabel"] {
+            color: var(--text-secondary) !important;
+        }
+        .stDataFrame {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        table.dataframe {
+            color: var(--text-primary) !important;
+        }
+        
+        /* --- Tabs --- */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            white-space: pre-wrap;
+            background-color: var(--surface-color);
+            border-radius: 4px 4px 0 0;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: var(--accent-color) !important;
+            color: #fff !important;
+            border: none;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 @st.cache_resource
@@ -61,37 +207,47 @@ def format_timestamp(ts_str: str) -> str:
 
 def page_dashboard():
     """Dashboard: today's attendance records + summary statistics."""
-    st.title("Attendance Dashboard")
-    st.caption(f"Today: {datetime.now().strftime('%Y-%m-%d')}")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.title("📊 Attendance Dashboard")
+    st.caption(f"Date: {datetime.now().strftime('%Y-%m-%d')}")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     att_logger = get_attendance_logger()
     face_db = get_face_database()
     records = att_logger.get_today_records()
     employees = face_db.get_all_employees()
 
-    st.subheader("Summary")
-    col1, col2, col3 = st.columns(3)
-
+    # Metrics Row
     checkins = [r for r in records if r["event"] == "checkin"]
     checkouts = [r for r in records if r["event"] == "checkout"]
     unique_today = set(r["employee"] for r in records)
 
+    col1, col2, col3 = st.columns(3)
     with col1:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.metric("Total Check-ins", len(checkins))
+        st.markdown('</div>', unsafe_allow_html=True)
     with col2:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.metric("Total Check-outs", len(checkouts))
+        st.markdown('</div>', unsafe_allow_html=True)
     with col3:
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.metric("Unique Employees Today", len(unique_today))
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.subheader("Registered Employees")
-    st.write(f"Total registered: {len(employees)}")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("👥 Registered Employees")
+    st.caption(f"Total registered: {len(employees)}")
     if employees:
         emp_df = pd.DataFrame(employees)
         st.dataframe(emp_df, use_container_width=True)
     else:
         st.info("No employees registered yet. Go to Register Employee to add someone.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.subheader("Today's Records")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("🕒 Today's Records")
     if records:
         df = pd.DataFrame(records)
         df["timestamp"] = df["timestamp"].apply(format_timestamp)
@@ -104,17 +260,25 @@ def page_dashboard():
         st.dataframe(df, use_container_width=True)
     else:
         st.info("No attendance records for today yet.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def page_register():
     """Register Employee: upload photo or use camera, extract embedding, save."""
-    st.title("Register Employee")
-
+    # Create a "Card" effect for the form
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    
+    st.title("🆔 Employee Registration")
+    st.caption("Add a new employee to the face database.")
+    
     face_rec = get_face_recognizer()
     face_db = get_face_database()
 
-    name = st.text_input("Employee Name", placeholder="e.g. Bruce")
-    employee_id = st.text_input("Employee ID", placeholder="e.g. EMP001")
+    col1, col2 = st.columns(2)
+    with col1:
+        name = st.text_input("Employee Name", placeholder="e.g. Bruce")
+    with col2:
+        employee_id = st.text_input("Employee ID", placeholder="e.g. EMP001")
 
     tab_upload, tab_camera = st.tabs(["Upload Photo", "Take Photo"])
 
@@ -128,10 +292,11 @@ def page_register():
             frame = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
             if frame is not None:
                 st.image(frame, channels="BGR", caption="Uploaded photo")
-                if st.button("Register from Upload", type="primary"):
+                if st.button("Register from Upload", type="primary", use_container_width=True):
                     _process_registration(name, employee_id, frame, face_rec, face_db)
 
     with tab_camera:
+        st.caption("Ensure good lighting and remove masks/sunglasses.")
         camera_img = st.camera_input("Take a photo")
         if camera_img is not None:
             file_bytes = np.frombuffer(camera_img.read(), np.uint8)
@@ -140,8 +305,10 @@ def page_register():
                 # Flip horizontally to match main.py behavior (non-mirror mode)
                 frame = cv2.flip(frame, 1)
                 st.image(frame, channels="BGR", caption="Captured photo")
-                if st.button("Register from Camera", type="primary"):
+                if st.button("Register from Camera", type="primary", use_container_width=True):
                     _process_registration(name, employee_id, frame, face_rec, face_db)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def _process_registration(name, employee_id, frame, face_rec, face_db):
@@ -249,12 +416,25 @@ def main():
         page_title="Face Attendance System",
         page_icon="👤",
         layout="wide",
+        initial_sidebar_state="expanded",
     )
+
+    # Apply the Linear-style Dark Mode design
+    set_page_design()
+
+    # Sidebar Navigation
+    with st.sidebar:
+        st.image("https://img.icons8.com/ios-filled/50/8b5cf6/fingerprint.png", width=50)
+        st.title("AI Attendance")
+        st.caption("v1.0.0 | Powered by InsightFace")
+        st.divider()
 
     page = st.sidebar.radio(
         "Navigation",
         ["Dashboard", "Register Employee", "Reports", "Live Camera"],
     )
+    
+    st.divider()
 
     if page == "Dashboard":
         page_dashboard()
