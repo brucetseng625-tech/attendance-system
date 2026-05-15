@@ -28,9 +28,6 @@ import src.i18n as T
 
 ROOT = get_project_root()
 
-# Default Admin Password
-ADMIN_PASSWORD = "admin"
-
 
 def set_page_design():
     """Inject custom CSS for Linear-style Dark Mode design."""
@@ -159,7 +156,8 @@ def page_login():
         with tab_admin:
             pw = st.text_input(T._("password"), type="password", key="admin_pw_input", placeholder="Password")
             if st.button(T._("btn_login"), type="primary", use_container_width=True):
-                if pw == ADMIN_PASSWORD:
+                user_mgr = UserManager()
+                if user_mgr.check_admin_password(pw):
                     st.session_state.logged_in = True
                     st.session_state.role = "admin"
                     st.rerun()
@@ -432,6 +430,36 @@ def page_settings():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # --- Admin Password Management ---
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader(T._("admin_password_section"))
+    
+    user_mgr = UserManager()
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        current_admin_pw = st.text_input(T._("current_admin_pw"), type="password", key="current_admin_pw")
+    with c2:
+        new_admin_pw = st.text_input(T._("new_admin_pw"), type="password", key="new_admin_pw")
+    
+    confirm_admin_pw = st.text_input(T._("confirm_new_admin_pw"), type="password", key="confirm_new_admin_pw")
+    
+    if st.button(T._("btn_change_admin_pw"), type="primary", use_container_width=True):
+        if not current_admin_pw:
+            st.error(T._("wrong_pw"))
+        elif not user_mgr.check_admin_password(current_admin_pw):
+            st.error(T._("admin_pw_current_wrong"))
+        elif not new_admin_pw:
+            st.error(T._("wrong_pw"))
+        elif new_admin_pw != confirm_admin_pw:
+            st.error(T._("pw_mismatch"))
+        else:
+            user_mgr.set_admin_password(new_admin_pw)
+            st.success(T._("admin_pw_updated"))
+            st.info("Please use the new password for your next login.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # --- User Password Management ---
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("👥 Employee Password Management")
@@ -510,8 +538,8 @@ def page_employee_portal():
 
     emp_name = st.session_state.current_employee
     
-    # Tabs for Request vs Password Change
-    tab_req, tab_pw = st.tabs([T._("portal_title"), T._("change_password")])
+    # Tabs for Request vs Attendance vs Password Change
+    tab_req, tab_att, tab_pw = st.tabs([T._("portal_title"), T._("my_attendance"), T._("change_password")])
 
     with tab_req:
         st.subheader(f"👋 Hello, {emp_name}")
@@ -597,6 +625,55 @@ def page_employee_portal():
             ]
             
             st.dataframe(df[show_cols], use_container_width=True)
+        else:
+            st.info(T._("history_empty"))
+
+    with tab_att:
+        st.subheader(f"📋 {emp_name} — {T._('my_attendance')}")
+        
+        att_logger = get_attendance_logger()
+        
+        # Today's Records
+        st.markdown(f"**{T._('attendance_today')}**")
+        today_records = att_logger.get_today_records(employee=emp_name)
+        
+        if today_records:
+            df_today = pd.DataFrame(today_records)
+            df_today["timestamp"] = df_today["timestamp"].apply(format_timestamp)
+            df_today = df_today.rename(columns={
+                "employee": T._("col_employee"),
+                "event": T._("col_event"),
+                "timestamp": T._("col_time"),
+                "confidence": T._("col_confidence")
+            })
+            st.dataframe(df_today, use_container_width=True)
+            
+            # Summary metrics
+            checkins = len([r for r in today_records if r["event"] == "checkin"])
+            checkouts = len([r for r in today_records if r["event"] == "checkout"])
+            c1, c2 = st.columns(2)
+            with c1: st.metric(T._("dash_total_checkins"), checkins)
+            with c2: st.metric(T._("dash_total_checkouts"), checkouts)
+        else:
+            st.info(T._("no_attendance_today"))
+        
+        st.divider()
+        
+        # Full History
+        st.markdown(f"**{T._('attendance_history')}**")
+        all_records = att_logger.get_employee_records(emp_name)
+        
+        if all_records:
+            df_all = pd.DataFrame(all_records)
+            df_all["timestamp"] = df_all["timestamp"].apply(format_timestamp)
+            df_all = df_all.rename(columns={
+                "employee": T._("col_employee"),
+                "event": T._("col_event"),
+                "timestamp": T._("col_time"),
+                "confidence": T._("col_confidence")
+            })
+            st.dataframe(df_all, use_container_width=True)
+            st.caption(f"{T._('total_records')}: {len(df_all)} {T._('records_count')}")
         else:
             st.info(T._("history_empty"))
 

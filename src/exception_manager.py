@@ -49,11 +49,13 @@ class ExceptionManager:
     ) -> int:
         """Add a new exception record. Returns the new ID."""
         conn = sqlite3.connect(self.db_path)
+        # Use local time for created_at
+        local_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             cursor = conn.execute(
-                """INSERT INTO exceptions (employee_id, type, start_time, end_time, reason, status)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (employee_id, exception_type, start_time, end_time, reason, status),
+                """INSERT INTO exceptions (employee_id, type, start_time, end_time, reason, status, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (employee_id, exception_type, start_time, end_time, reason, status, local_now),
             )
             conn.commit()
             return cursor.lastrowid

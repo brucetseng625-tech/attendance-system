@@ -8,6 +8,8 @@ ROOT = Path(__file__).parent.parent / "data"
 DB_PATH = ROOT / "users.db"
 
 class UserManager:
+    ADMIN_USERNAME = "__admin__"
+
     def __init__(self):
         ROOT.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -34,11 +36,21 @@ class UserManager:
         """Verify if password matches stored hash."""
         stored_hash = self._get_stored_hash(username)
         
-        # If no password set in DB, default is "1234"
+        # If no password set in DB, use defaults
         if stored_hash is None:
-            return password == "1234"
+            if username == self.ADMIN_USERNAME:
+                return password == "admin"  # Default admin password
+            return password == "1234"  # Default employee password
         
         return stored_hash == self._hash_password(password)
+
+    def check_admin_password(self, password: str) -> bool:
+        """Verify admin password."""
+        return self.check_password(self.ADMIN_USERNAME, password)
+
+    def set_admin_password(self, new_password: str) -> bool:
+        """Update admin password (hashed)."""
+        return self.set_password(self.ADMIN_USERNAME, new_password)
 
     def _get_stored_hash(self, username: str) -> str | None:
         conn = sqlite3.connect(str(DB_PATH))

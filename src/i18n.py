@@ -141,6 +141,23 @@ TRANSLATIONS = {
     "emp_password": {"en": "Employee Password", "zh": "員工密碼"},
     "emp_default_pw": {"en": "Default: 1234", "zh": "預設：1234"},
     
+    # My Attendance (Employee)
+    "my_attendance": {"en": "📋 My Attendance", "zh": "📋 我的打卡"},
+    "attendance_today": {"en": "Today's Attendance", "zh": "今日打卡"},
+    "attendance_history": {"en": "Attendance History", "zh": "打卡歷史記錄"},
+    "no_attendance_today": {"en": "No attendance records today.", "zh": "今日尚無打卡記錄。"},
+    "total_records": {"en": "Total", "zh": "總計"},
+    "records_count": {"en": "records", "zh": "筆"},
+    
+    # Admin Password
+    "admin_password_section": {"en": "🔑 Admin Password", "zh": "🔑 管理者密碼"},
+    "current_admin_pw": {"en": "Current Password", "zh": "目前密碼"},
+    "new_admin_pw": {"en": "New Password", "zh": "新密碼"},
+    "confirm_new_admin_pw": {"en": "Confirm New Password", "zh": "確認新密碼"},
+    "btn_change_admin_pw": {"en": "Update Admin Password", "zh": "更新管理者密碼"},
+    "admin_pw_updated": {"en": "Admin password updated!", "zh": "管理者密碼已更新！"},
+    "admin_pw_current_wrong": {"en": "Current password is incorrect", "zh": "目前密碼不正確"},
+    
     # Time & Password
     "start_time": {"en": "Start Time", "zh": "開始時間"},
     "end_time": {"en": "End Time", "zh": "結束時間"},

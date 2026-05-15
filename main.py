@@ -142,47 +142,75 @@ def run_pipeline() -> None:
 
                     # Match against database
                     embedding = faces[0]["embedding"]
-                    name = face_db.match(embedding, threshold=config["face_recognition"]["match_threshold"])
+                    threshold = config["face_recognition"]["match_threshold"]
+                    name = face_db.match(embedding, threshold=threshold)
+                    if not name:
+                        continue
 
-                    if name:
-                        logger.info(f"Detected: {name} (track_id={track_id})")
-                        result = att_logger.log(name, "checkin", confidence=float(1.0 - config["face_recognition"]["match_threshold"]))
-                        
-                        # Check cooldown status
+                    logger.info(f"Detected: {name} (track_id={track_id})")
+
+                    # 1. Check Exception Status First (Higher Priority)
+                    is_exempted = exception_manager.is_exempted(name)
+
+                    status_obj = guard_engine.get_status(
+                        name=name,
+                        is_cooldown=False,
+                        is_exempted=is_exempted
+                    )
+
+                    # 2. Determine Message based on Priority
+                    if status_obj.status == GuardStatus.EXEMPTED:
+                        current_status_msg = f"{name} - 已核准 (請假/公出)"
+                        is_success = True
+                    elif status_obj.status == GuardStatus.LUNCH:
+                        current_status_msg = f"{name} - 午休時間"
+                        is_success = True
+                    else:
+                        # 3. Auto toggle: checkin <-> checkout based on last event today
+                        last_event = att_logger.get_last_event_type(name)
+                        if last_event == "checkin":
+                            event_type = "checkout"
+                        else:
+                            event_type = "checkin"
+
+                        result = att_logger.log(name, event_type, confidence=float(1.0 - config["face_recognition"]["match_threshold"]))
                         is_cooldown = (result["status"] != "logged")
 
-                        # Check exception status if guard mode is enabled
-                        is_exempted = False
-                        if guard_engine.enabled:
-                            is_exempted = exception_manager.is_exempted(name)
+                        if is_cooldown:
+                            current_status_msg = f"{name} - 偵測中 (冷卻中)"
+                            is_success = False
+                        else:
+                            if event_type == "checkin":
+                                logger.success(f"Check-in logged: {name} at {result['timestamp']}")
+                                current_status_msg = f"{name} - 上班打卡成功!"
+                            else:
+                                logger.success(f"Check-out logged: {name} at {result['timestamp']}")
+                                current_status_msg = f"{name} - 下班登出成功!"
+                            is_success = True
 
-                        # Determine status via Guard Engine
-                        status_obj = guard_engine.get_status(
-                            name=name,
-                            is_cooldown=is_cooldown,
-                            is_exempted=is_exempted
-                        )
+                    # Add to active messages
+                    current_time = time.time()
+                    active_messages = [m for m in active_messages if m["expires_at"] > current_time]
 
-                        # Add to active messages
-                        current_time = time.time()
-                        
-                        # Filter expired first
-                        active_messages = [m for m in active_messages if m["expires_at"] > current_time]
-                        
-                        # Assign Y position based on stack
-                        y_pos = 50
-                        for existing in sorted(active_messages, key=lambda m: m["y_pos"]):
-                            y_pos = existing["y_pos"] + 60  # Vertical spacing
-                        
-                        active_messages.append({
-                            "text": status_obj.message,
-                            "color": status_obj.color,
-                            "expires_at": current_time + 5.0,  # Show for 5 seconds
-                            "y_pos": y_pos,
-                            "is_success": not status_obj.is_abnormal
-                        })
-                        
-                        attempted_ids[track_id] = time.time()
+                    y_pos = 50
+                    for existing in sorted(active_messages, key=lambda m: m["y_pos"]):
+                        y_pos = existing["y_pos"] + 60
+
+                    # Determine color
+                    if status_obj.status in [GuardStatus.EXEMPTED, GuardStatus.LUNCH]:
+                        msg_color = status_obj.color
+                    else:
+                        msg_color = (0, 255, 0) if is_success else (255, 165, 0)
+
+                    active_messages.append({
+                        "text": current_status_msg,
+                        "color": msg_color,
+                        "expires_at": current_time + 5.0,
+                        "y_pos": y_pos,
+                        "is_success": is_success
+                    })
+
+                    attempted_ids[track_id] = time.time()
 
             # Draw zone polygon
             h, w = frame.shape[:2]

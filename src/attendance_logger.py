@@ -122,6 +122,37 @@ class AttendanceLogger:
         finally:
             conn.close()
 
+    def get_employee_records(self, employee: str) -> list[dict]:
+        """Get all attendance records for a specific employee."""
+        conn = self._get_conn()
+        try:
+            rows = conn.execute(
+                "SELECT employee, event_type, timestamp, confidence FROM attendance WHERE employee = ? ORDER BY timestamp DESC",
+                (employee,),
+            ).fetchall()
+            return [
+                {"employee": r[0], "event": r[1], "timestamp": r[2], "confidence": r[3]}
+                for r in rows
+            ]
+        finally:
+            conn.close()
+
+    def get_last_event_type(self, employee: str) -> str | None:
+        """Get the last event type (checkin/checkout) for an employee today."""
+        conn = self._get_conn()
+        try:
+            today = datetime.now().strftime("%Y-%m-%d")
+            cursor = conn.execute(
+                """SELECT event_type FROM attendance 
+                   WHERE employee = ? AND timestamp LIKE ? 
+                   ORDER BY timestamp DESC LIMIT 1""",
+                (employee, f"{today}%"),
+            )
+            row = cursor.fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
+
     def export_csv(self, output_path: str):
         """Export all records to CSV."""
         records = self.get_all_records()
