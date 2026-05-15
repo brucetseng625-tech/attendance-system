@@ -74,10 +74,14 @@ class AttendanceLogger:
             conn.close()
 
     def _in_cooldown(self, conn, employee: str, event_type: str, now: datetime) -> bool:
-        """Check if the last event of this type is within cooldown period."""
+        """Check if the last event (any type) is within cooldown period.
+
+        Changed from event_type specific to global employee check.
+        This prevents rapid toggling (e.g., checking out and immediately checking back in).
+        """
         row = conn.execute(
-            "SELECT timestamp FROM attendance WHERE employee = ? AND event_type = ? ORDER BY timestamp DESC LIMIT 1",
-            (employee, event_type),
+            "SELECT timestamp FROM attendance WHERE employee = ? ORDER BY timestamp DESC LIMIT 1",
+            (employee,),
         ).fetchone()
         if row is None:
             return False

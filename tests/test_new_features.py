@@ -74,13 +74,15 @@ class TestAttendanceLoggerNewMethods:
     def test_get_employee_records_empty(self, logger):
         assert logger.get_employee_records("Nobody") == []
 
-    def test_cooldown_does_not_block_toggle(self, logger):
-        """Cooldown is event_type specific, so checkin shouldn't block checkout."""
-        logger2 = AttendanceLogger(db_path=logger.db_path, cooldown_seconds=0)
+    def test_cooldown_blocks_rapid_toggle(self, logger):
+        """Cooldown applies to ALL events for an employee, preventing rapid toggles."""
+        # Create a logger with a longer cooldown for testing
+        logger2 = AttendanceLogger(db_path=logger.db_path, cooldown_seconds=60)
         logger2.log("Eve", "checkin")
-        # checkout should succeed (different event_type, no cooldown)
+        
+        # checkout should be blocked because checkin was just logged (within 60s)
         result = logger2.log("Eve", "checkout")
-        assert result["status"] == "logged"
+        assert result["status"] == "cooldown"
 
 
 class TestUserManagerAdminPassword:
