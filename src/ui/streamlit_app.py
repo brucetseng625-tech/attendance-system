@@ -384,6 +384,28 @@ def page_settings():
     # 3. Grace Period
     grace = st.number_input(T._("settings_grace"), value=guard.get("grace_period_minutes", 15))
     
+    st.divider()
+    
+    # 4. Lunch Break Settings
+    st.subheader("🍽️ Lunch Break Window")
+    lunch_config = config.get("lunch_break", {"enabled": False, "start": "12:00", "end": "13:00"})
+    lunch_enabled = st.toggle(
+        "Enable Lunch Break", 
+        value=lunch_config.get("enabled", False)
+    )
+    
+    if lunch_enabled:
+        l_c1, l_c2 = st.columns(2)
+        with l_c1:
+            lunch_start_val = datetime.strptime(lunch_config.get("start", "12:00"), "%H:%M").time()
+            lunch_start = st.time_input("Start", value=lunch_start_val)
+        with l_c2:
+            lunch_end_val = datetime.strptime(lunch_config.get("end", "13:00"), "%H:%M").time()
+            lunch_end = st.time_input("End", value=lunch_end_val)
+    else:
+        lunch_start = None
+        lunch_end = None
+    
     # Save Button
     if st.button(T._("btn_save_config"), type="primary", use_container_width=True):
         # Update dict
@@ -393,6 +415,13 @@ def page_settings():
             "end": new_end.strftime("%H:%M")
         }
         config["guard_mode"]["grace_period_minutes"] = int(grace)
+        
+        # Save Lunch Break config
+        config["lunch_break"] = {
+            "enabled": lunch_enabled,
+            "start": lunch_start.strftime("%H:%M") if lunch_start else "12:00",
+            "end": lunch_end.strftime("%H:%M") if lunch_end else "13:00"
+        }
         
         # Write to YAML
         with open(config_path, "w", encoding="utf-8") as f:

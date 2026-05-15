@@ -36,5 +36,9 @@ guard_mode:
     start: "09:00"
     end: "18:00"
   grace_period_minutes: 15  # Allowed late arrival window
-  # Leave/Business exception database path
   exception_db: data/exceptions.db
+
+lunch_break:
+  enabled: false
+  start: "12:00"
+  end: "13:00"

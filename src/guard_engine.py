@@ -13,6 +13,7 @@ class GuardStatus:
     EARLY_LEAVE = "early_leave"
     EXEMPTED = "exempted"
     COOLDOWN = "cooldown"
+    LUNCH = "lunch"
 
     def __init__(self, status: str, message: str, color: tuple[int, int, int]) -> None:
         self.status = status
@@ -36,6 +37,13 @@ class GuardEngine:
         self.start_hour, self.start_min = map(int, config["guard_mode"]["work_hours"]["start"].split(":"))
         self.end_hour, self.end_min = map(int, config["guard_mode"]["work_hours"]["end"].split(":"))
         self.grace_minutes = config["guard_mode"].get("grace_period_minutes", 15)
+
+        # Lunch Break Configuration
+        self.lunch = config.get("lunch_break", {})
+        self.lunch_enabled = self.lunch.get("enabled", False)
+        if self.lunch_enabled:
+            self.lunch_start = datetime.strptime(self.lunch["start"], "%H:%M").time()
+            self.lunch_end = datetime.strptime(self.lunch["end"], "%H:%M").time()
 
         logger.info(
             f"Guard Mode enabled: {self.start_hour:02d}:{self.start_min:02d} - {self.end_hour:02d}:{self.end_min:02d}"
@@ -62,6 +70,12 @@ class GuardEngine:
             return GuardStatus(GuardStatus.EXEMPTED, f"{name} - 已核准 (請假/公出)", (0, 128, 255))
 
         now = current_time or datetime.now()
+        now_time = now.time()
+
+        # Check Lunch Break first
+        if self.lunch_enabled and self.lunch_start <= now_time <= self.lunch_end:
+            return GuardStatus(GuardStatus.LUNCH, f"{name} - 午休時間", (0, 191, 255))
+
         start_time = now.replace(hour=self.start_hour, minute=self.start_min, second=0, microsecond=0)
         end_time = now.replace(hour=self.end_hour, minute=self.end_min, second=0, microsecond=0)
 
