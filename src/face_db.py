@@ -65,6 +65,11 @@ class FaceDatabase:
         finally:
             conn.close()
 
+    def close(self) -> None:
+        """Safely close the database connection if it exists."""
+        if hasattr(self, 'conn') and self.conn:
+            self.conn.close()
+
     def get_all_employees(self) -> list[dict]:
         """Get all registered employees (without embeddings to save memory)."""
         conn = self._get_conn()

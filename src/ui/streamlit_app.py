@@ -123,35 +123,88 @@ def format_timestamp(ts_str: str) -> str:
 # PAGE: LOGIN
 # =============================================================================
 def page_login():
-    st.markdown(f'<div class="card"><h1 style="text-align:center; margin-bottom: 2rem;">{T._("login_title")}</h1>', unsafe_allow_html=True)
+    # Center the login box
+    st.markdown("""
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            flex-direction: column;
+        }
+        .login-box {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+    </style>
+    """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2, gap="large")
-    
-    with col1:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader(T._("admin_login"))
-        pw = st.text_input(T._("password"), type="password", key="admin_pw_input")
-        if st.button(T._("btn_login"), use_container_width=True):
-            if pw == ADMIN_PASSWORD:
-                st.session_state.logged_in = True
-                st.session_state.role = "admin"
-                st.rerun()
-            else:
-                st.error(T._("wrong_pw"))
-        st.markdown('</div>', unsafe_allow_html=True)
-
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader(T._("employee_portal"))
-        st.caption("No password required")
+        st.markdown('<div class="login-box">', unsafe_allow_html=True)
+        st.image("https://img.icons8.com/ios-filled/50/8b5cf6/fingerprint.png", width=60)
+        st.title(T._("login_title"))
+        st.caption("AI Face Attendance System | v2.0")
         st.divider()
-        if st.button(T._("btn_enter"), type="primary", use_container_width=True):
-            st.session_state.logged_in = True
-            st.session_state.role = "employee"
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        tab_admin, tab_emp = st.tabs([T._("admin_login"), T._("employee_portal")])
+
+        with tab_admin:
+            pw = st.text_input(T._("password"), type="password", key="admin_pw_input", placeholder="Password")
+            if st.button(T._("btn_login"), type="primary", use_container_width=True):
+                if pw == ADMIN_PASSWORD:
+                    st.session_state.logged_in = True
+                    st.session_state.role = "admin"
+                    st.rerun()
+                else:
+                    st.error(T._("wrong_pw"))
+        
+        with tab_emp:
+            # Fetch employee list for selection
+            try:
+                face_db = get_face_database()
+                employees = face_db.get_all_employees()
+                emp_names = [e["name"] for e in employees]
+            except:
+                emp_names = []
+
+            if emp_names:
+                selected_emp = st.selectbox("👤 選擇您的姓名", emp_names)
+                pw = st.text_input(T._("emp_password"), type="password", key="emp_pw_input", placeholder="Enter password")
+                
+                if st.button(T._("btn_enter"), type="primary", use_container_width=True):
+                    if pw == "1234":  # Default Employee Password
+                        st.session_state.logged_in = True
+                        st.session_state.role = "employee"
+                        st.session_state.current_employee = selected_emp
+                        st.rerun()
+                    else:
+                        st.error(T._("wrong_pw"))
+            else:
+                st.warning("No employees registered. Contact Admin.")
+        
+        # Language Switcher at bottom of Login
+        st.divider()
+        lang_opt = st.radio(
+            T._("lang_label"), 
+            ["繁體中文", "English"],
+            horizontal=True,
+            index=0 if st.session_state.language == "zh" else 1,
+            key="lang_radio_login"
+        )
+        if (lang_opt == "English" and st.session_state.language != "en") or \
+           (lang_opt == "繁體中文" and st.session_state.language != "zh"):
+            st.session_state.language = "en" if lang_opt == "English" else "zh"
+            T.set_language(st.session_state.language)
+            st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -327,19 +380,21 @@ def page_approvals():
 # =============================================================================
 def page_employee_portal():
     st.title(T._("portal_title"))
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    # Removed the card wrapper to fix the black box artifact
     
-    face_db = get_face_database()
-    employees = face_db.get_all_employees()
-    emp_names = [e["name"] for e in employees]
-    
-    if not emp_names:
-        st.warning("No employees registered yet.")
+    # Get current employee from session state
+    if "current_employee" not in st.session_state:
+        st.error("Session error. Please log in again.")
         return
 
-    # Form
-    emp_name = st.selectbox(T._("select_emp"), emp_names)
+    emp_name = st.session_state.current_employee
+    st.subheader(f"👋 Hello, {emp_name}")
     
+    # Config for hours
+    config = load_config()
+    guard_config = config.get("guard_mode", {})
+    
+    # Form
     c1, c2 = st.columns(2)
     with c1:
         exc_type = st.selectbox(T._("guard_type"), [T._("guard_type_leave"), T._("guard_type_business")])
@@ -348,10 +403,6 @@ def page_employee_portal():
         end_dt = st.date_input(T._("guard_end"))
     
     reason = st.text_area(T._("guard_reason"))
-    
-    # Config for hours
-    config = load_config()
-    guard_config = config.get("guard_mode", {})
     
     if st.button("Submit Request", type="primary", use_container_width=True):
         type_key = "leave" if exc_type == T._("guard_type_leave") else "business"
@@ -369,8 +420,6 @@ def page_employee_portal():
         )
         st.success(T._("submit_success"))
         st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # History
     st.subheader(T._("my_requests"))

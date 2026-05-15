@@ -135,6 +135,8 @@ TRANSLATIONS = {
     "history_empty": {"en": "No history found.", "zh": "尚無申請記錄。"},
     "submit_success": {"en": "Request submitted!", "zh": "單據已送出！"},
     "select_emp": {"en": "Select Your Name", "zh": "選擇您的姓名"},
+    "emp_password": {"en": "Employee Password", "zh": "員工密碼"},
+    "emp_default_pw": {"en": "Default: 1234", "zh": "預設：1234"},
 }
 
 # Current language state (default to Traditional Chinese)
