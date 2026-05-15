@@ -139,14 +139,17 @@ class AttendanceLogger:
 
     def get_last_event_type(self, employee: str) -> str | None:
         """Get the last event type (checkin/checkout) for an employee today."""
+        from datetime import timedelta
+
         conn = self._get_conn()
         try:
-            today = datetime.now().strftime("%Y-%m-%d")
+            today_str = datetime.now().strftime("%Y-%m-%d")
+            tomorrow_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
             cursor = conn.execute(
-                """SELECT event_type FROM attendance 
-                   WHERE employee = ? AND timestamp LIKE ? 
+                """SELECT event_type FROM attendance
+                   WHERE employee = ? AND timestamp >= ? AND timestamp < ?
                    ORDER BY timestamp DESC LIMIT 1""",
-                (employee, f"{today}%"),
+                (employee, today_str, tomorrow_str),
             )
             row = cursor.fetchone()
             return row[0] if row else None

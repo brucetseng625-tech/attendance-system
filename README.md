@@ -10,7 +10,10 @@ Real-time face recognition attendance system powered by YOLOv8 detection, BYTETr
 
 - **Real-time Detection**: YOLOv8 + Supervision (BYTETrack) for person tracking. (即時人臉偵測與追蹤)
 - **Face Recognition**: InsightFace ArcFace with high accuracy. (高精度人臉辨識)
+- **Auto Check-in/Check-out**: Single camera auto-toggles between entry and exit logging. (單鏡頭自動判斷上下班進出)
 - **Guard Mode (Phase 2)**: Work-hour rules, Late/Abnormal warnings, and Leave/Business exemptions. (門警模式：上下班判定、異常警告、請假/公出差勤豁免)
+- **Employee Self-Service**: View personal attendance history and submit leave requests. (員工自助：查看個人打卡歷史、申請單據)
+- **Admin Password Management**: Secure SHA-256 hashed passwords with in-app change support. (管理者密碼：SHA-256 雜湊儲存，後台可直接修改)
 - **Multi-person Support**: Concurrent status display for multiple people. (支援多人同時進出顯示)
 - **Bilingual UI**: English / Traditional Chinese toggle in the web dashboard. (網頁後台支援中英雙語切換)
 - **Streamlit Dashboard**: Register employees, view reports, and manage exceptions. (Streamlit 儀表板：員工註冊、報表查詢、單據管理)
@@ -161,3 +164,127 @@ pytest tests/ -v
 - `GET /api/v1/attendance/today`: Today's records. (今日打卡記錄)
 - `GET /api/v1/guard/status?employee_id=...`: Current access status. (目前進出狀態)
 - `GET /api/v1/exceptions`: List of approved exceptions. (已核准單據清單)
+
+---
+
+## 📋 Changelog | 更新日誌
+
+### v2.2.0 — 2026-05-15
+
+| 項目 | 說明 |
+|------|------|
+| 🔄 **Auto Check-in/Check-out** | 單鏡頭自動判斷進出：當日首次偵測記為 `checkin`，後續偵測自動切換為 `checkout` |
+| 📊 **Employee Attendance History** | 員工入口新增「📋 我的打卡」分頁，可查看今日打卡記錄與完整歷史 |
+| 🔑 **Admin Password Management** | 管理者密碼不再硬編碼，改為可修改的雜湊儲存。設定頁新增「🔑 管理者密碼」區塊 |
+| 🔒 **Security Fix** | `exception_manager.py` `created_at` 改為本地時間（UTC → Local Timezone） |
+| 🐛 **Bug Fix** | 修復主程式重複疊加訊息區塊的 bug；修復已請假/午休時員工仍顯示「打卡成功」的優先級問題 |
+| 🛡️ **Priority Fix** | 例外狀態 (EXEMPTED/LUNCH) 優先級高於打卡成功，畫面正確顯示藍色/青色提示 |
+| 🐛 **Fix** | `get_last_event_type()` 改用明確日期範圍比對 (`>=` / `<`)，取代脆弱的 LIKE 字串比對 |
+| 🌐 **i18n** | 新增 14 組繁英雙語翻譯鍵值 |
+
+### v2.1.0 — 2026-05-14
+
+| 項目 | 說明 |
+|------|------|
+| 🛡️ **Guard Mode** | 門警模式：工作時段判定、遲到/早退/非上班時間異常警告 |
+| 📝 **Exception Management** | 請假/公出差勤單據申請與審核 |
+| 🌐 **Bilingual UI** | 中英文切換介面 |
+| 🔐 **Role-Based Access** | 管理員/員工分權登入 |
+| 📷 **IP Camera** | RTSP 網路攝影機支援 |
+
+### v2.0.0 — 2026-05-14
+
+| 項目 | 說明 |
+|------|------|
+| 🚀 **Initial Release** | YOLOv8 + InsightFace 即時人臉打卡系統 |
+| 📊 **Streamlit Dashboard** | 員工註冊、即時畫面、報表查詢、CSV 匯出 |
+| 🔒 **Cooldown** | 30 分鐘防重複打卡機制 |
+
+---
+
+## 🪟 Windows Installation | Windows 安裝指南
+
+### Prerequisites | 前置需求
+
+- **Python 3.10–3.12**（推薦 3.11）：[python.org/downloads](https://www.python.org/downloads/)
+  - ⚠️ 安裝時務必勾選 **"Add Python to PATH"**
+- **Git**：[git-scm.com](https://git-scm.com/download/win)
+- **Visual C++ Build Tools**：ONNX Runtime 編譯所需
+  - 下載 [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+  - 安裝時勾選 **"C++ 桌面開發"**
+- **DirectX / GPU（可選）**：如需 CUDA 加速，需安裝 [NVIDIA CUDA Toolkit 11.8+](https://developer.nvidia.com/cuda-downloads) 與對應驅動
+
+### Step-by-Step | 安裝步驟
+
+```powershell
+# 1. Clone the repository
+git clone https://github.com/brucetseng625-tech/attendance-system.git
+cd attendance-system
+
+# 2. Create a virtual environment (recommended)
+python -m venv venv
+.\venv\Scripts\activate
+
+# 3. Upgrade pip (avoids build errors on some packages)
+python -m pip install --upgrade pip
+
+# 4. Install dependencies
+pip install -r requirements.txt
+```
+
+### ⚠️ Windows-Specific Notes | Windows 注意事項
+
+1. **ONNX Runtime / InsightFace 安裝**
+   - 如果 `pip install insightface` 回報 `onnxruntime` 編譯錯誤，手動安裝預編譯版本：
+     ```powershell
+     pip install onnxruntime  # CPU-only (推薦先試這個)
+     # 或
+     pip install onnxruntime-gpu  # GPU 加速
+     pip install insightface --no-deps
+     pip install protobuf numpy opencv-python
+     ```
+
+2. **相機權限**
+   - Windows 10/11：**設定 > 隱私權 > 相機** → 確保「允許桌面應用程式存取相機」已開啟
+   - 如果 `main.py` 啟動後畫面全黑，檢查是否被防毒軟體阻擋
+
+3. **字型路徑差異**
+   - `main.py` 預設載入 macOS 字型 (`/System/Library/Fonts/STHeiti Medium.ttc`)
+   - **Windows 需修改 `main.py` 字型路徑**為：
+     ```python
+     # Windows: Microsoft JhengHei (微軟正黑體)
+     font_path = "C:/Windows/Fonts/msjh.ttc"  # 或 msjhbd.ttc (粗體)
+     ```
+
+4. **防火牆 / 防毒軟體**
+   - 部分防毒軟體會阻擋 Python 存取 webcam，需將 Python 新增至白名單
+   - Windows Defender：**設定 > 隱私權與安全性 > Windows 安全性 > 應用程式與瀏覽器控制 > 應用程式隔離**
+
+5. **Streamlit 防火牆提示**
+   - 首次執行 `streamlit run src/ui/streamlit_app.py` 時，Windows 防火牆可能彈出提示
+   - 選擇「允許存取」（私人網路即可）
+
+6. **路徑分隔符**
+   - PowerShell 中使用 `.\venv\Scripts\activate`（注意反斜線）
+   - 避免在路徑中使用空白或中文目錄名稱
+
+7. **GPU 加速（可選）**
+   - 僅限 NVIDIA 顯卡。安裝後修改 `src/face_recognizer.py`：
+     ```python
+     self.detector.prepare(ctx_id=0, providers=["CUDAExecutionProvider", "CPUExecutionProvider"])
+     ```
+
+### Quick Test | 快速驗證
+
+```powershell
+# Verify installation
+python -c "import cv2; import insightface; import ultralytics; print('All dependencies OK')"
+
+# Start Streamlit UI
+streamlit run src/ui/streamlit_app.py
+
+# Run camera pipeline
+python main.py
+```
+
+---
