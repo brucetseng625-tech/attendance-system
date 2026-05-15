@@ -568,14 +568,35 @@ def page_employee_portal():
         
         if history:
             df = pd.DataFrame(history)
+            
+            # --- Format Times ---
+            # Remove ":00" seconds for start/end times
+            df["start_time"] = df["start_time"].apply(lambda x: x[:-3] if isinstance(x, str) and len(x) > 16 else x)
+            df["end_time"] = df["end_time"].apply(lambda x: x[:-3] if isinstance(x, str) and len(x) > 16 else x)
+            
+            # Format created_at correctly using our helper
+            df["created_at"] = df["created_at"].apply(format_timestamp)
+            
+            # --- Rename Columns ---
             df = df.rename(columns={
+                "id": T._("col_id"),
+                "employee_id": T._("col_applicant"),
                 "type": T._("guard_type"),
                 "start_time": T._("col_from"),
                 "end_time": T._("col_to"),
                 "status": T._("col_status"),
-                "reason": T._("col_reason")
+                "reason": T._("col_reason"),
+                "created_at": T._("col_applied_at")
             })
-            st.dataframe(df, use_container_width=True)
+            
+            # Select columns to show
+            show_cols = [
+                T._("col_id"), T._("col_applicant"), T._("guard_type"), 
+                T._("col_from"), T._("col_to"), T._("col_status"), 
+                T._("col_reason"), T._("col_applied_at")
+            ]
+            
+            st.dataframe(df[show_cols], use_container_width=True)
         else:
             st.info(T._("history_empty"))
 

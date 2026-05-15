@@ -99,6 +99,9 @@ TRANSLATIONS = {
     "col_to": {"en": "To", "zh": "結束"},
     "col_status": {"en": "Status", "zh": "狀態"},
     "col_reason": {"en": "Reason", "zh": "事由"},
+    "col_id": {"en": "ID", "zh": "編號"},
+    "col_applicant": {"en": "Applicant", "zh": "申請人"},
+    "col_applied_at": {"en": "Applied At", "zh": "申請時間"},
     "guard_no_exc": {"en": "No exceptions currently recorded.", "zh": "目前尚無例外單據。"},
 
     # Auth & Roles
