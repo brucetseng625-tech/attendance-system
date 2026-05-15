@@ -2,6 +2,14 @@
 
 Real-time face recognition attendance system powered by YOLOv8 detection, BYTETrack tracking, and InsightFace recognition.
 
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+* **Python 3.10+**: Recommended version is **Python 3.11** (tested).
+* **Webcam**: Built-in laptop camera or external USB webcam (tested with FaceTime HD Camera).
+* **Operating System**: macOS (tested), Linux, Windows (OpenCV support required).
+
 ## Architecture
 
 ```
