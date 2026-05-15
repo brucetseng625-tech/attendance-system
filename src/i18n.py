@@ -145,6 +145,7 @@ TRANSLATIONS = {
     "new_password": {"en": "New Password", "zh": "新密碼"},
     "confirm_password": {"en": "Confirm Password", "zh": "確認密碼"},
     "btn_change_pw": {"en": "Update Password", "zh": "更新密碼"},
+    "btn_submit_request": {"en": "Submit Request", "zh": "送出申請"},
     "pw_updated": {"en": "Password updated!", "zh": "密碼已更新！"},
     "pw_mismatch": {"en": "Passwords do not match", "zh": "兩次密碼不一致"},
 }

@@ -1,6 +1,7 @@
 """User Password Manager for Attendance System."""
 
 import sqlite3
+import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent / "data"
@@ -25,8 +26,21 @@ class UserManager:
         finally:
             conn.close()
 
-    def get_password(self, username: str) -> str:
-        """Get password for a user. Default is '1234' if not found."""
+    def _hash_password(self, password: str) -> str:
+        """Hash password using SHA-256."""
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def check_password(self, username: str, password: str) -> bool:
+        """Verify if password matches stored hash."""
+        stored_hash = self._get_stored_hash(username)
+        
+        # If no password set in DB, default is "1234"
+        if stored_hash is None:
+            return password == "1234"
+        
+        return stored_hash == self._hash_password(password)
+
+    def _get_stored_hash(self, username: str) -> str | None:
         conn = sqlite3.connect(str(DB_PATH))
         try:
             cursor = conn.execute(
@@ -34,18 +48,19 @@ class UserManager:
                 (username,)
             )
             row = cursor.fetchone()
-            return row[0] if row else "1234"
+            return row[0] if row else None
         finally:
             conn.close()
 
     def set_password(self, username: str, new_password: str) -> bool:
-        """Update or insert user password."""
+        """Update or insert user password (hashed)."""
+        hashed_pw = self._hash_password(new_password)
         conn = sqlite3.connect(str(DB_PATH))
         try:
             conn.execute(
                 """INSERT OR REPLACE INTO user_passwords (username, password) 
                    VALUES (?, ?)""",
-                (username, new_password)
+                (username, hashed_pw)
             )
             conn.commit()
             return True

@@ -180,11 +180,9 @@ def page_login():
                 pw = st.text_input(T._("emp_password"), type="password", key="emp_pw_input", placeholder="Enter password")
                 
                 if st.button(T._("btn_enter"), type="primary", use_container_width=True):
-                    # Check password dynamically
+                    # Check password dynamically using hashed verification
                     user_mgr = UserManager()
-                    correct_pw = user_mgr.get_password(selected_emp)
-                    
-                    if pw == correct_pw:
+                    if user_mgr.check_password(selected_emp, pw):
                         st.session_state.logged_in = True
                         st.session_state.role = "employee"
                         st.session_state.current_employee = selected_emp
@@ -261,21 +259,43 @@ def render_register():
     with c1: name = st.text_input(T._("reg_name"), placeholder="e.g. Bruce")
     with c2: emp_id = st.text_input(T._("reg_id"), placeholder="e.g. EMP001")
     
-    uploaded = st.file_uploader(T._("reg_upload_label"), type=["jpg", "png"])
-    if uploaded:
-        f_bytes = np.frombuffer(uploaded.read(), np.uint8)
-        frame = cv2.imdecode(f_bytes, cv2.IMREAD_COLOR)
-        st.image(frame, channels="BGR", caption="Preview")
-        if st.button(T._("reg_btn_upload"), type="primary", use_container_width=True):
-            if not name or not emp_id:
-                st.error(T._("reg_error_fields"))
-                return
-            emb = face_rec.register_from_frame(frame, name)
-            if emb is None:
-                st.error(T._("reg_error_face"))
-            else:
-                face_db.register(name, emp_id, emb)
-                st.success(T._("reg_success"))
+    if not name or not emp_id:
+        st.warning(T._("reg_error_fields"))
+        st.markdown('</div>', unsafe_allow_html=True)
+        return
+
+    tab_upload, tab_camera = st.tabs([T._("reg_tab_upload"), T._("reg_tab_camera")])
+
+    with tab_upload:
+        uploaded = st.file_uploader(T._("reg_upload_label"), type=["jpg", "png"])
+        if uploaded:
+            f_bytes = np.frombuffer(uploaded.read(), np.uint8)
+            frame = cv2.imdecode(f_bytes, cv2.IMREAD_COLOR)
+            st.image(frame, channels="BGR", caption="Preview")
+            if st.button(T._("reg_btn_upload"), type="primary", use_container_width=True):
+                emb = face_rec.register_from_frame(frame, name)
+                if emb is None:
+                    st.error(T._("reg_error_face"))
+                else:
+                    face_db.register(name, emp_id, emb)
+                    st.success(T._("reg_success"))
+
+    with tab_camera:
+        st.caption(T._("reg_camera_caption"))
+        camera_img = st.camera_input(T._("reg_tab_camera"))
+        if camera_img:
+            f_bytes = np.frombuffer(camera_img.read(), np.uint8)
+            frame = cv2.imdecode(f_bytes, cv2.IMREAD_COLOR)
+            frame = cv2.flip(frame, 1) # Non-mirror
+            st.image(frame, channels="BGR", caption="Live Capture")
+            if st.button(T._("reg_btn_camera"), type="primary", use_container_width=True):
+                emb = face_rec.register_from_frame(frame, name)
+                if emb is None:
+                    st.error(T._("reg_error_face"))
+                else:
+                    face_db.register(name, emp_id, emb)
+                    st.success(T._("reg_success"))
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 
@@ -284,15 +304,54 @@ def render_register():
 # =============================================================================
 def render_reports():
     st.title(T._("rep_title"))
+    
     att_logger = get_attendance_logger()
     records = att_logger.get_all_records()
-    if records:
-        df = pd.DataFrame(records)
-        df["timestamp"] = df["timestamp"].apply(format_timestamp)
-        df = df.rename(columns={"employee": T._("col_employee"), "event": T._("col_event"), "timestamp": T._("col_time")})
-        st.dataframe(df, use_container_width=True)
-    else:
+    
+    if not records:
         st.info(T._("rep_no_records"))
+        return
+
+    df = pd.DataFrame(records)
+    df["timestamp"] = pd.to_datetime(df["timestamp"]) # Convert to datetime for filtering
+    
+    # --- Filters ---
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        # Date Filter
+        min_date = df["timestamp"].min().date()
+        max_date = df["timestamp"].max().date()
+        date_range = st.date_input("📅 Date Range", value=(min_date, max_date))
+    with c2:
+        # Employee Filter
+        employees = sorted(df["employee"].unique())
+        selected_emp = st.selectbox("👤 Employee", ["All"] + employees)
+    with c3:
+        # Event Type Filter
+        selected_event = st.selectbox("📝 Event Type", ["All", "checkin", "checkout"])
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Apply Filters
+    filtered_df = df.copy()
+    if len(date_range) == 2:
+        start_date, end_date = date_range
+        filtered_df = filtered_df[
+            (filtered_df["timestamp"].dt.date >= start_date) & 
+            (filtered_df["timestamp"].dt.date <= end_date)
+        ]
+    if selected_emp != "All":
+        filtered_df = filtered_df[filtered_df["employee"] == selected_emp]
+    if selected_event != "All":
+        filtered_df = filtered_df[filtered_df["event"] == selected_event]
+
+    # Display
+    display_df = filtered_df.sort_values("timestamp", ascending=False)
+    display_df["timestamp"] = display_df["timestamp"].apply(format_timestamp)
+    display_df = display_df.rename(columns={"employee": T._("col_employee"), "event": T._("col_event"), "timestamp": T._("col_time")})
+    
+    st.dataframe(display_df, use_container_width=True)
+    st.caption(f"Showing {len(display_df)} records")
 
 
 # =============================================================================
@@ -434,26 +493,26 @@ def page_employee_portal():
         
         # Success Message Handling
         if st.session_state.get("request_submitted"):
-            st.success("✅ Request Submitted Successfully!")
+            st.success("✅ 單據已送出！")
             st.session_state.request_submitted = False
 
-        # Form with Date AND Time
+        # Form with Date AND Time (Using Keys to enable clearing)
         c1, c2 = st.columns(2)
         with c1:
-            exc_type = st.selectbox(T._("guard_type"), [T._("guard_type_leave"), T._("guard_type_business")])
-            start_dt = st.date_input(T._("guard_start"))
-            start_tm = st.time_input(T._("start_time"), value=datetime.strptime("09:00", "%H:%M").time())
+            exc_type = st.selectbox(T._("guard_type"), [T._("guard_type_leave"), T._("guard_type_business")], key="exc_type_key")
+            start_dt = st.date_input(T._("guard_start"), key="start_dt_key")
+            start_tm = st.time_input(T._("start_time"), value=datetime.strptime("09:00", "%H:%M").time(), key="start_tm_key")
         with c2:
-            end_dt = st.date_input(T._("guard_end"))
-            end_tm = st.time_input(T._("end_time"), value=datetime.strptime("18:00", "%H:%M").time())
+            end_dt = st.date_input(T._("guard_end"), key="end_dt_key")
+            end_tm = st.time_input(T._("end_time"), value=datetime.strptime("18:00", "%H:%M").time(), key="end_tm_key")
         
-        reason = st.text_area(T._("guard_reason"))
+        reason = st.text_area(T._("guard_reason"), key="reason_key")
         
-        if st.button("Submit Request", type="primary", use_container_width=True):
+        if st.button(T._("btn_submit_request"), type="primary", use_container_width=True):
             type_key = "leave" if exc_type == T._("guard_type_leave") else "business"
-            # Combine date and time
-            start_str = f"{start_dt} {start_tm.strftime('%H:%M')}"
-            end_str = f"{end_dt} {end_tm.strftime('%H:%M')}"
+            # Combine date and time explicitly
+            start_str = f"{start_dt.strftime('%Y-%m-%d')} {start_tm.strftime('%H:%M')}:00"
+            end_str = f"{end_dt.strftime('%Y-%m-%d')} {end_tm.strftime('%H:%M')}:00"
             
             exc_mgr = get_exception_manager()
             exc_mgr.add_exception(
@@ -465,6 +524,12 @@ def page_employee_portal():
                 status="pending"
             )
             st.session_state.request_submitted = True
+            
+            # Clear form keys to reset inputs
+            for key in ["exc_type_key", "start_dt_key", "start_tm_key", "end_dt_key", "end_tm_key", "reason_key"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+                    
             st.rerun()
         
         # History
