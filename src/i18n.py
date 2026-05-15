@@ -100,6 +100,41 @@ TRANSLATIONS = {
     "col_status": {"en": "Status", "zh": "狀態"},
     "col_reason": {"en": "Reason", "zh": "事由"},
     "guard_no_exc": {"en": "No exceptions currently recorded.", "zh": "目前尚無例外單據。"},
+
+    # Auth & Roles
+    "login_title": {"en": "AI Attendance Login", "zh": "AI 打卡系統登入"},
+    "admin_login": {"en": "Admin Login", "zh": "管理員登入"},
+    "employee_portal": {"en": "Employee Portal", "zh": "員工入口"},
+    "password": {"en": "Password", "zh": "密碼"},
+    "btn_login": {"en": "Login", "zh": "登入"},
+    "btn_enter": {"en": "Enter", "zh": "進入"},
+    "logout": {"en": "Logout", "zh": "登出"},
+    "wrong_pw": {"en": "Incorrect password", "zh": "密碼錯誤"},
+
+    # Settings
+    "settings_title": {"en": "⚙️ System Settings", "zh": "⚙️ 系統設定"},
+    "settings_guard_toggle": {"en": "Enable Guard Mode", "zh": "啟用門警模式"},
+    "settings_work_start": {"en": "Work Start", "zh": "上班時間"},
+    "settings_work_end": {"en": "Work End", "zh": "下班時間"},
+    "settings_grace": {"en": "Grace Period (min)", "zh": "緩衝期 (分鐘)"},
+    "btn_save_config": {"en": "Save Settings", "zh": "儲存設定"},
+    "msg_config_saved": {"en": "Settings saved successfully!", "zh": "設定已儲存！"},
+
+    # Approvals
+    "approval_title": {"en": "✅ Approval Queue", "zh": "✅ 單據審核"},
+    "action_approve": {"en": "Approve", "zh": "核准"},
+    "action_reject": {"en": "Reject", "zh": "駁回"},
+    "status_pending": {"en": "Pending", "zh": "待審核"},
+    "status_approved": {"en": "Approved", "zh": "已核准"},
+    "status_rejected": {"en": "Rejected", "zh": "已駁回"},
+    "no_pending": {"en": "No pending requests.", "zh": "目前沒有待審核單據。"},
+
+    # Employee Portal
+    "portal_title": {"en": "📝 Request Portal", "zh": "📝 申請單據"},
+    "my_requests": {"en": "My Requests", "zh": "我的申請記錄"},
+    "history_empty": {"en": "No history found.", "zh": "尚無申請記錄。"},
+    "submit_success": {"en": "Request submitted!", "zh": "單據已送出！"},
+    "select_emp": {"en": "Select Your Name", "zh": "選擇您的姓名"},
 }
 
 # Current language state (default to Traditional Chinese)

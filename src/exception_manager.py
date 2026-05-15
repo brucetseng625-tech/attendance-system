@@ -99,3 +99,41 @@ class ExceptionManager:
             return [dict(row) for row in cursor.fetchall()]
         finally:
             conn.close()
+
+    def get_pending_exceptions(self) -> list[dict]:
+        """Get all pending exception records."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        try:
+            cursor = conn.execute(
+                "SELECT * FROM exceptions WHERE status = 'pending' ORDER BY created_at ASC"
+            )
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_exceptions_by_employee(self, employee_id: str) -> list[dict]:
+        """Get all exceptions for a specific employee."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        try:
+            cursor = conn.execute(
+                "SELECT * FROM exceptions WHERE employee_id = ? ORDER BY created_at DESC",
+                (employee_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def update_status(self, exception_id: int, status: str) -> bool:
+        """Update the status of an exception (approve/reject)."""
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                "UPDATE exceptions SET status = ? WHERE id = ?",
+                (status, exception_id)
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
