@@ -71,6 +71,10 @@ def run_pipeline() -> None:
     face_check_interval = 3
     frame_count = 0
 
+    # Persistent status message state
+    current_status_msg = ""
+    status_msg_expiry = 0.0
+
     # FPS tracking
     fps_start = time.time()
     fps_frame_count = 0
@@ -91,9 +95,6 @@ def run_pipeline() -> None:
             # Detection + tracking
             detections = detector.detect_and_track(frame)
             inside_ids = zone_checker.check_detections(detections, frame.shape)
-
-            # Status message to display on video
-            status_msg = ""
 
             # Face recognition for people in zone (throttled)
             if frame_count % face_check_interval == 0:
@@ -133,17 +134,12 @@ def run_pipeline() -> None:
                         result = att_logger.log(name, "checkin", confidence=float(1.0 - config["face_recognition"]["match_threshold"]))
                         if result["status"] == "logged":
                             logger.success(f"Check-in logged: {name} at {result['timestamp']}")
-                            status_msg = f"{name} - 打卡成功!"
+                            current_status_msg = f"{name} - 打卡成功!"
                         else:
-                            status_msg = f"{name} - 偵測中 (冷卻中)"
+                            current_status_msg = f"{name} - 偵測中 (冷卻中)"
+                        # Persist message for 3 seconds
+                        status_msg_expiry = time.time() + 3.0
                         attempted_ids[track_id] = time.time()
-
-            # Draw status message on video
-            if status_msg:
-                # Background for text
-                (w, h), _ = cv2.getTextSize(status_msg, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
-                cv2.rectangle(frame, (10, 40), (w + 20, 40 + h + 20), (0, 0, 0), -1)
-                cv2.putText(frame, status_msg, (15, 40 + h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
             # Draw zone polygon
             h, w = frame.shape[:2]
@@ -167,6 +163,14 @@ def run_pipeline() -> None:
                 fps_frame_count = 0
                 fps_start = time.time()
             cv2.putText(frame, f"FPS: {fps_value:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+            # Draw persistent status message (on top)
+            if time.time() < status_msg_expiry:
+                (w, h), _ = cv2.getTextSize(current_status_msg, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)
+                # Draw background
+                cv2.rectangle(frame, (10, 50), (w + 20, 50 + h + 20), (0, 0, 0), -1)
+                cv2.rectangle(frame, (10, 50), (w + 20, 50 + h + 20), (0, 255, 0), 2)
+                cv2.putText(frame, current_status_msg, (15, 50 + h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
             cv2.imshow("Attendance System", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
