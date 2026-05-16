@@ -222,6 +222,8 @@ pytest tests/ -v
 
 ## 🪟 Windows Installation | Windows 安裝指南
 
+> 💡 **快速啟動**：在專案目錄下雙擊 `windows.html`，即可開啟視覺化的 Windows 啟動頁（含一鍵複製指令、常見問題排解）。
+
 ### Prerequisites | 前置需求
 
 - **Python 3.10–3.12**（推薦 3.11）：[python.org/downloads](https://www.python.org/downloads/)

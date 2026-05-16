@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Face Attendance System | AI 人臉打卡系統</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --surface: #161a21;
+            --surface-hover: #1c2128;
+            --border: #2a2e37;
+            --text: #f0f0f5;
+            --text-secondary: #8b949e;
+            --accent: #5e6ad2;
+            --accent-end: #8b5cf6;
+            --danger: #d73a49;
+            --success: #2ea44f;
+            --warning: #d29922;
+            --info: #58a6ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 3rem 0 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .version {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 0 0.3rem;
+        }
+        .badge-win { background: rgba(88, 166, 255, 0.15); color: var(--info); }
+        .badge-ver { background: rgba(94, 106, 210, 0.15); color: var(--accent); }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: var(--accent); }
+
+        .card h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Quick Start Buttons */
+        .quick-start {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .qs-btn {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--text);
+        }
+        .qs-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(94, 106, 210, 0.2);
+        }
+        .qs-btn .icon {
+            font-size: 2rem;
+            width: 3rem;
+            text-align: center;
+        }
+        .qs-btn .info h3 { font-size: 1rem; font-weight: 600; }
+        .qs-btn .info p { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+        /* Code Blocks */
+        .code-block {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            margin: 0.8rem 0;
+            position: relative;
+            overflow-x: auto;
+        }
+        .code-block code {
+            font-family: 'Cascadia Code', 'Consolas', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #e6edf3;
+        }
+        .code-block .prompt { color: var(--success); }
+        .code-block .comment { color: var(--text-secondary); }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.3rem 0.6rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+
+        /* Steps */
+        .step {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .step-content h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .step-content p { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* Credentials Table */
+        .cred-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.8rem 0;
+        }
+        .cred-table th, .cred-table td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .cred-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .cred-table td { font-size: 0.9rem; }
+
+        /* Alert */
+        .alert {
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            border-left: 4px solid;
+        }
+        .alert-warning {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: var(--warning);
+        }
+        .alert-info {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: var(--info);
+        }
+        .alert-success {
+            background: rgba(46, 164, 79, 0.1);
+            border-color: var(--success);
+        }
+
+        /* Features Grid */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.8rem;
+            background: var(--surface-hover);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .feature .icon { font-size: 1.2rem; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+        .footer a { color: var(--accent); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0; margin-bottom: 1rem; }
+        .tab-btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .tab-btn:first-child { border-radius: 8px 0 0 8px; }
+        .tab-btn:last-child { border-radius: 0 8px 8px 0; }
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .header h1 { font-size: 1.5rem; }
+            .quick-start { grid-template-columns: 1fr; }
+            .features { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 AI Face Attendance System</h1>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">AI 人臉打卡系統 — Windows 專用啟動頁</p>
+            <div style="margin-top: 0.8rem;">
+                <span class="badge badge-win">Windows 10/11</span>
+                <span class="badge badge-ver">v2.2.0</span>
+                <span class="badge" style="background: rgba(46,164,79,0.15); color: var(--success);">Python 3.10–3.12</span>
+            </div>
+        </div>
+
+        <!-- Quick Start -->
+        <div class="card">
+            <h2>🚀 快速啟動</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                先以管理員身份開啟 <strong>PowerShell</strong>，切換到專案目錄後執行：
+            </p>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">複製</button>
+                <code><span class="prompt">PS&gt; </span>cd C:\你的路徑\attendance-system<br><span class="prompt">PS&gt; </span>.\venv\Scripts\activate<br><span class="prompt">(venv) PS&gt; </span></code>
+            </div>
+
+            <div class="quick-start" style="margin-top: 1.2rem;">
+                <div class="qs-btn" onclick="copyCmd('streamlit run src/ui/streamlit_app.py')">
+                    <div class="icon">📊</div>
+                    <div class="info">
+                        <h3>Streamlit 儀表板</h3>
+                        <p>員工註冊、打卡報表、系統設定</p>
+                    </div>
+                </div>
+                <div class="qs-btn" onclick="copyCmd('python main.py')">
+                    <div class="icon">📷</div>
+                    <div class="info">
+                        <h3>視訊打卡主程式</h3>
+                        <p>即時人臉辨識打卡（需攝影機）</p>
+                    </div>
+                </div>
+                <div class="qs-btn" onclick="copyCmd('python -m uvicorn src.api_server:app --reload')">
+                    <div class="icon">🔌</div>
+                    <div class="info">
+                        <h3>FastAPI 伺服器</h3>
+                        <p>ERP/HR 系統 API 串接</p>
+                    </div>
+                </div>
+                <div class="qs-btn" onclick="copyCmd('pytest tests/ -v')">
+                    <div class="icon">🧪</div>
+                    <div class="info">
+                        <h3>執行測試</h3>
+                        <p>驗證所有功能正常運作</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installation Steps -->
+        <div class="card">
+            <h2>📦 安裝步驟（首次使用）</h2>
+
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h3>安裝 Visual C++ Build Tools</h3>
+                    <p>InsightFace / ONNX Runtime 需要 C++ 編譯器。下載 <a href="https://visualstudio.microsoft.com/visual-cpp-build-tools/" style="color: var(--info);">Build Tools</a>，勾選「使用 C++ 的桌面開發」。</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h3>建立虛擬環境並安裝依賴</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">複製</button>
+                        <code><span class="prompt">PS&gt; </span>python -m venv venv<br><span class="prompt">PS&gt; </span>.\venv\Scripts\activate<br><span class="prompt">(venv) PS&gt; </span>python -m pip install --upgrade pip<br><span class="prompt">(venv) PS&gt; </span>pip install -r requirements.txt</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h3>下載活體檢測模型（可選）</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">複製</button>
+                        <code><span class="prompt">(venv) PS&gt; </span>python scripts/download_models.py</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <h3>驗證安裝</h3>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">複製</button>
+                        <code><span class="prompt">(venv) PS&gt; </span>python -c "import cv2; import insightface; import ultralytics; print('All OK')"</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Default Credentials -->
+        <div class="card">
+            <h2>🔐 預設帳號密碼</h2>
+            <div class="alert alert-warning">
+                ⚠️ 首次登入後請立即修改密碼！
+            </div>
+            <table class="cred-table">
+                <thead>
+                    <tr><th>角色</th><th>預設密碼</th><th>說明</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>管理員</strong></td><td><code>admin</code></td><td>可管理所有設定</td></tr>
+                    <tr><td><strong>員工</strong></td><td><code>1234</code></td><td>可查看個人記錄</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Features -->
+        <div class="card">
+            <h2>🌟 功能一覽</h2>
+            <div class="features">
+                <div class="feature"><span class="icon">👤</span> YOLOv8 人臉偵測</div>
+                <div class="feature"><span class="icon">🔍</span> InsightFace 辨識</div>
+                <div class="feature"><span class="icon">🔄</span> 自動上下班切換</div>
+                <div class="feature"><span class="icon">🛡️</span> 活體檢測防造假</div>
+                <div class="feature"><span class="icon">📊</span> Streamlit 儀表板</div>
+                <div class="feature"><span class="icon">🔌</span> FastAPI ERP 串接</div>
+                <div class="feature"><span class="icon">🛡️</span> 門警模式</div>
+                <div class="feature"><span class="icon">🌐</span> 中英雙語介面</div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card">
+            <h2>🔧 常見問題</h2>
+
+            <div class="alert alert-info">
+                <strong>相機畫面全黑</strong><br>
+                設定 → 隱私權與安全性 → 相機 → 開啟「允許桌面應用程式存取相機」
+            </div>
+
+            <div class="alert alert-info">
+                <strong><code>python</code> 指令找不到</strong><br>
+                安裝 Python 時未勾選「Add Python to PATH」，請重新安裝或手動加入環境變數。
+            </div>
+
+            <div class="alert alert-info">
+                <strong><code>.\venv\Scripts\activate</code> 被擋</strong><br>
+                以管理員身份執行：<code>Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>中文顯示亂碼</strong><br>
+                修改 <code>main.py</code> 第 108 行字型路徑為 <code>C:/Windows/Fonts/msjh.ttc</code>
+            </div>
+        </div>
+
+        <!-- Links -->
+        <div class="card">
+            <h2>📎 相關資源</h2>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="https://github.com/brucetseng625-tech/attendance-system" style="color: var(--info); text-decoration: none; padding: 0.5rem 0; font-size: 0.9rem;" target="_blank">
+                    📂 GitHub 專案
+                </a>
+                <a href="https://github.com/brucetseng625-tech/attendance-system/blob/main/docs/usage.md" style="color: var(--info); text-decoration: none; padding: 0.5rem 0; font-size: 0.9rem;" target="_blank">
+                    📖 完整使用說明
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>AI Face Attendance System v2.2.0 — Built with YOLOv8 + InsightFace + Streamlit</p>
+            <p style="margin-top: 0.3rem;">Windows 安裝指南由 <strong>Hermes (小愛)</strong> 於 2026-05-18 製作</p>
+        </div>
+    </div>
+
+    <script>
+        function copyCmd(cmd) {
+            navigator.clipboard.writeText(cmd).then(() => {
+                // Show brief feedback
+                const el = event.currentTarget;
+                const orig = el.querySelector('.info h3').textContent;
+                el.querySelector('.info h3').textContent = '✅ 已複製到剪貼簿！';
+                setTimeout(() => { el.querySelector('.info h3').textContent = orig; }, 1500);
+            });
+        }
+
+        function copyCode(btn) {
+            const code = btn.nextElementSibling.innerText.replace(/PS>|>\s*/g, '').trim();
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = '✅ 已複製';
+                setTimeout(() => { btn.textContent = '複製'; }, 1500);
+            });
+        }
+    </script>
+</body>
+</html>

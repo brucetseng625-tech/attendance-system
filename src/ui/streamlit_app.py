@@ -117,6 +117,37 @@ def format_timestamp(ts_str: str) -> str:
     except: return str(ts_str)
 
 
+def _process_registration(name: str, emp_id: str, frame, face_rec, face_db):
+    """Process employee face registration.
+
+    Separated from render_register() for unit testing.
+    Args:
+        name: Employee name
+        emp_id: Employee ID
+        frame: numpy array (BGR image)
+        face_rec: FaceRecognizer instance
+        face_db: FaceDatabase instance
+    Returns: None (uses st.success/st.error for feedback)
+    """
+    if not name or not name.strip():
+        st.error("Please enter a name.")
+        return
+    if not emp_id or not emp_id.strip():
+        st.error("Please enter an employee ID.")
+        return
+    if frame is None:
+        st.error("Please provide a photo.")
+        return
+
+    emb = face_rec.register_from_frame(frame, name)
+    if emb is None:
+        st.error("No face detected. Please use a clear front-facing photo.")
+        return
+
+    face_db.register(name, emp_id, emb)
+    st.success(f"✅ {name} ({emp_id}) registered successfully!")
+
+
 # =============================================================================
 # PAGE: LOGIN
 # =============================================================================
