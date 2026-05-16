@@ -187,6 +187,18 @@ pytest tests/ -v
 
 ## 📋 Changelog | 更新日誌
 
+### v2.3.0 — 2026-05-18
+
+| 項目 | 說明 |
+|------|------|
+| 🛡️ **Liveness Detection (活體檢測)** | 新增 Mini-FASNet 靜默活體檢測，防止照片/螢幕/影片等欺騙手段。基於 ONNX Runtime 推論，支援 CPU/GPU 自動偵測。預設閾值 0.8，可在 `config.yaml` 調整 |
+| 🛡️ **Anti-Spoofing Visual Feedback** | 偵測到非活體（照片/螢幕）時，畫面立即顯示紅色警告「⚠️ 非活體！」並阻止打卡 |
+| 📦 **Windows Launcher** | 新增 `windows.html` 視覺化啟動頁，雙擊即可在瀏覽器開啟，含一鍵複製指令、快速啟動按鈕、常見問題排解 |
+| 📖 **Windows Installation Guide** | 新增 `docs/windows-installation-guide.md` 完整安裝指南，涵蓋 VC++ Build Tools、相機權限、字型路徑、PowerShell 執行政策 |
+| 🐛 **Cooldown Fix** | 修復 `attendance_logger` cooldown 邏輯 — 改為按事件類型獨立計算（checkin/checkout 互不干擾），允許 checkin 後立即 checkout |
+| 🐛 **Test Infrastructure** | 新增 `_process_registration()` 函數，解決 5 個 Streamlit 單元測試失敗。全部 91 個測試現在全部通過 |
+| 🐛 **test_cooldown Fix** | 更新 `test_cooldown_blocks_rapid_toggle` 匹配新的 event-type-specific cooldown 行為 |
+
 ### v2.2.0 — 2026-05-15
 
 | 項目 | 說明 |
