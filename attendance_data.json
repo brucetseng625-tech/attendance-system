@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-09-09T14:07:44.626760",
+  "exported_at": "2026-09-09T14:42:36.404087",
   "metadata": {},
   "total": 65,
   "records": [
@@ -675,9 +675,9 @@
       "weekday_zh": "週六",
       "weekday_vi": "Thứ Bảy",
       "check_in": "07:30",
-      "lunch_out": null,
+      "lunch_out": "11:31",
       "lunch_in": null,
-      "check_out": "11:31",
+      "check_out": null,
       "work_hours": 4.0,
       "status": "unpaid_leave",
       "status_label_zh": "事假/無薪假",
