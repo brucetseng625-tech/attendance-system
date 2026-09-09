@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="vi" translate="no" class="notranslate">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate" />
+  <title>万和包装（富寿）- 员工考勤打卡查询与管理规章 (Wanhe Attendance Portal)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS CDN for client-side Excel parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+    body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .tab-btn.active { border-bottom: 3px solid #38bdf8; color: #ffffff; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header Banner -->
+  <header class="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-950 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div class="bg-white/10 p-2.5 rounded-xl border border-white/20 backdrop-blur">
+          <i data-lucide="building-2" class="w-7 h-7 text-sky-400"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">CÔNG TY TNHH BAO BÌ WANHE</h1>
+          <p class="text-xs sm:text-sm text-blue-200" id="header-subtitle">萬和包裝（富壽）有限公司 · 員工服務專區 (Cổng thông tin nhân viên)</p>
+        </div>
+      </div>
+
+      <!-- Language Switcher -->
+      <div class="flex items-center gap-1.5 bg-white/10 p-1 rounded-xl border border-white/15 text-xs">
+        <button onclick="setLanguage('vi')" id="lang-btn-vi" class="px-2.5 py-1 rounded-lg font-medium transition bg-sky-500 text-white font-bold shadow-sm">
+          🇻🇳 Tiếng Việt
+        </button>
+        <button onclick="setLanguage('zh')" id="lang-btn-zh" class="px-2.5 py-1 rounded-lg font-medium transition text-blue-200 hover:text-white">
+          🇹🇼 繁體中文
+        </button>
+        <button onclick="setLanguage('bilingual')" id="lang-btn-bi" class="px-2.5 py-1 rounded-lg font-medium transition text-blue-200 hover:text-white">
+          🌐 Song ngữ (雙語)
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-6xl mx-auto px-4 flex gap-6 border-t border-white/10">
+      <button onclick="switchTab('attendance')" id="tab-attendance-btn" class="tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-sky-400">
+        <i data-lucide="calendar-check" class="w-4 h-4 text-sky-400"></i>
+        <span id="tab-title-attendance">Tra cứu chấm công (出勤打卡查詢)</span>
+      </button>
+      <button onclick="switchTab('regulations')" id="tab-regulations-btn" class="tab-btn py-3 text-sm font-medium flex items-center gap-2 text-blue-200 hover:text-white">
+        <i data-lucide="book-open" class="w-4 h-4"></i>
+        <span id="tab-title-regulations">Nội quy lao động (員工管理規章)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-6xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
+
+    <!-- ==================== TAB 1: ATTENDANCE QUERY ==================== -->
+    <section id="tab-attendance" class="space-y-6">
+
+      <!-- Query Form Card (Always Visible) -->
+      <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2" id="query-card-title">
+              <i data-lucide="search" class="w-5 h-5 text-blue-600"></i>
+              <span>Tra cứu thông tin chấm công (考勤資訊查詢)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-1" id="query-card-desc">
+              Nhập mã nhân viên và nhấn nút [Tra cứu] để xem giờ vào ra 4 ca và số ngày công của bạn.
+            </p>
+          </div>
+
+          <!-- Data File Loader (for test / offline use) -->
+          <div class="flex items-center gap-2">
+            <label class="cursor-pointer bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 flex items-center gap-1.5 transition" title="Nạp file Excel hoặc JSON xuất từ ERP">
+              <i data-lucide="upload" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span id="btn-upload-label">Nạp file Excel / JSON</span>
+              <input type="file" id="file-input" accept=".xlsx,.xls,.json" class="hidden" onchange="handleFileUpload(event)" />
+            </label>
+            <button onclick="reloadDefaultData()" title="Tải lại dữ liệu (重新載入資料)" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Query Inputs Row -->
+        <form onsubmit="event.preventDefault(); doSearch();" class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 mt-5 items-end">
+          <!-- Emp Code Input -->
+          <div class="sm:col-span-6">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" id="label-emp-input">
+              Mã nhân viên / 工號 (hoặc họ tên): <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+              <input
+                type="text"
+                id="input-emp-code"
+                placeholder="Ví dụ: EMP-001, VH001 hoặc tên..."
+                class="w-full pl-10 pr-3 py-2.5 text-sm font-semibold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white transition"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Month Filter -->
+          <div class="sm:col-span-3">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" id="label-month-input">
+              Tháng làm việc (月份篩選):
+            </label>
+            <input
+              type="month"
+              id="input-month"
+              class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white transition"
+            />
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="sm:col-span-3 flex gap-2">
+            <button
+              type="submit"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 text-sm"
+              id="btn-search"
+            >
+              <i data-lucide="search" class="w-4 h-4"></i>
+              <span id="btn-search-text">Tra cứu (查詢)</span>
+            </button>
+            <button
+              type="button"
+              onclick="resetSearch()"
+              title="Xóa tìm kiếm (清除)"
+              class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl border border-slate-200 transition"
+            >
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- State 1: Before Search Prompt (Initial View) -->
+      <div id="prompt-before-search" class="bg-white rounded-2xl p-10 sm:p-14 text-center border border-slate-200 shadow-sm space-y-3">
+        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+          <i data-lucide="fingerprint" class="w-9 h-9"></i>
+        </div>
+        <h3 class="text-base sm:text-lg font-bold text-slate-800" id="prompt-title">
+          Vui lòng nhập Mã nhân viên để bắt đầu tra cứu
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto" id="prompt-desc">
+          Hệ thống bảo mật thông tin cá nhân. Bạn chỉ xem được dữ liệu chấm công và giờ làm của chính mình sau khi nhập đúng Mã NV (工號).
+        </p>
+      </div>
+
+      <!-- State 2: Result Container (Hidden until searched) -->
+      <div id="search-result-container" class="hidden space-y-6">
+
+        <!-- Employee Info Banner -->
+        <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center font-bold text-lg text-sky-300 border border-white/20">
+              <i data-lucide="id-card" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-bold tracking-wide" id="res-emp-name">—</span>
+                <span class="bg-sky-400/20 text-sky-200 font-mono text-xs px-2.5 py-0.5 rounded-full border border-sky-400/30" id="res-emp-code">—</span>
+              </div>
+              <p class="text-xs text-blue-200 mt-0.5" id="res-emp-dept-pos">— · —</p>
+            </div>
+          </div>
+          <div class="text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+            <span id="res-month-badge">Kỳ công: Tháng này</span>
+          </div>
+        </div>
+
+        <!-- KPI Statistics Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <!-- Total Working Days -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div class="text-xs text-slate-500 font-medium flex items-center justify-between">
+              <span id="stat-lbl-days">Số ngày công (出勤)</span>
+              <i data-lucide="calendar" class="w-4 h-4 text-blue-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-slate-800" id="stat-total-days">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">
+              <span id="stat-lbl-hours-prefix">Tổng giờ:</span> <strong id="stat-total-hours" class="text-blue-600 font-semibold">0</strong>h
+            </div>
+          </div>
+
+          <!-- Normal -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div class="text-xs text-emerald-600 font-medium flex items-center justify-between">
+              <span id="stat-lbl-normal">Bình thường (正常)</span>
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-emerald-600" id="stat-normal-days">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-normal-sub">Đúng giờ chuẩn</div>
+          </div>
+
+          <!-- Late / Early Leave -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div class="text-xs text-amber-600 font-medium flex items-center justify-between">
+              <span id="stat-lbl-late">Đi muộn / Về sớm (遲到早退)</span>
+              <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-amber-600" id="stat-late-count">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-late-sub">Trễ sau 08:00</div>
+          </div>
+
+          <!-- Leaves (Annual, sick, unpaid, etc.) -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div class="text-xs text-sky-600 font-medium flex items-center justify-between">
+              <span id="stat-lbl-leave">Nghỉ phép (請假)</span>
+              <i data-lucide="coffee" class="w-4 h-4 text-sky-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-sky-600" id="stat-leave-days">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-leave-sub">Phép năm / có phép</div>
+          </div>
+
+          <!-- Absent -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div class="text-xs text-rose-600 font-medium flex items-center justify-between">
+              <span id="stat-lbl-absent">Vắng mặt (曠工缺勤)</span>
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500"></i>
+            </div>
+            <div class="mt-2 text-2xl font-bold text-rose-600" id="stat-absent-days">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-absent-sub">Không có phép</div>
+          </div>
+        </div>
+
+        <!-- 4-Slot Punch Table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2" id="table-head-title">
+              <i data-lucide="clock-4" class="w-4 h-4 text-blue-600"></i>
+              <span>Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)</span>
+            </h3>
+            <span class="text-xs text-slate-500" id="table-showing-count">0 ngày</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+              <thead class="bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-3.5" id="th-date">Ngày (日期)</th>
+                  <th class="py-3 px-3 text-center" id="th-weekday">Thứ (星期)</th>
+                  <th class="py-3 px-3 text-center bg-sky-50 text-sky-800" id="th-slot1">Vào sáng (上班 1)</th>
+                  <th class="py-3 px-3 text-center bg-sky-50/70 text-sky-800" id="th-slot2">Ra trưa (下班 1)</th>
+                  <th class="py-3 px-3 text-center bg-indigo-50 text-indigo-800" id="th-slot3">Vào chiều (上班 2)</th>
+                  <th class="py-3 px-3 text-center bg-indigo-50/70 text-indigo-800" id="th-slot4">Ra chiều (下班 2)</th>
+                  <th class="py-3 px-3 text-right" id="th-hours">Giờ làm (工時)</th>
+                  <th class="py-3 px-4 text-center" id="th-status">Trạng thái (出勤狀態)</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-tbody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- Rows will be injected by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: COMPANY REGULATIONS ==================== -->
+    <section id="tab-regulations" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div class="flex items-center gap-3.5 pb-5 border-b border-slate-200">
+          <div class="p-3 bg-blue-50 text-blue-700 rounded-xl">
+            <i data-lucide="scale" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-900" id="reg-main-title">NỘI QUY LAO ĐỘNG & QUY CHẾ CÔNG TY</h2>
+            <p class="text-xs text-slate-500 mt-0.5" id="reg-main-sub">萬和包裝（富壽）有限公司 · 員工勞動規章與管理手冊 (Áp dụng từ năm 2026)</p>
+          </div>
+        </div>
+
+        <div class="mt-6 space-y-6" id="regulations-content">
+          <!-- Regulations rendered by renderRegulations() -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p id="footer-text-1">© 2026 CÔNG TY TNHH BAO BÌ WANHE (PHÚ THỌ) · 萬和紙業（富壽）有限公司</p>
+    <p class="text-[11px] text-slate-400 mt-1" id="footer-text-2">
+      Dữ liệu tĩnh bảo mật tuyệt đối trên GitHub Pages · Liên hệ Phòng Nhân sự khi có thắc mắc về chấm công
+    </p>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+  <script>
+    let allRecords = [];
+    let currentEmployeeCode = "";
+    let currentLang = localStorage.getItem("portal_lang") || "vi";
+
+    // Bilingual text dictionary
+    const I18N = {
+      vi: {
+        subtitle: "萬和包裝（富壽）有限公司 · 員工服務專區 (Cổng thông tin nhân viên)",
+        tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
+        tabRegulations: "Nội quy lao động (員工管理規章)",
+        queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
+        queryDesc: "Nhập mã nhân viên để xem giờ vào ra 4 ca và số ngày công của bạn.",
+        btnUpload: "Nạp file Excel / JSON",
+        labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
+        placeholderEmpInput: "Ví dụ: EMP-001, VH001 hoặc họ tên...",
+        labelMonthInput: "Tháng làm việc (月份篩選):",
+        btnSearch: "Tra cứu (查詢)",
+        promptTitle: "Vui lòng nhập Mã nhân viên để tra cứu",
+        promptDesc: "Hệ thống bảo mật thông tin cá nhân. Bạn chỉ xem được dữ liệu của chính mình sau khi nhập đúng Mã NV (工號).",
+        lblDays: "Số ngày công",
+        lblHoursPrefix: "Tổng giờ:",
+        lblNormal: "Bình thường",
+        lblNormalSub: "Đúng giờ chuẩn",
+        lblLate: "Đi muộn / Về sớm",
+        lblLateSub: "Trễ sau 08:00",
+        lblLeave: "Nghỉ phép",
+        lblLeaveSub: "Phép năm / có phép",
+        lblAbsent: "Vắng mặt",
+        lblAbsentSub: "Không có phép",
+        tableHeadTitle: "Chi tiết 4 lần chấm công hàng ngày",
+        thDate: "Ngày",
+        thWeekday: "Thứ",
+        thSlot1: "Vào sáng (1)",
+        thSlot2: "Ra trưa (2)",
+        thSlot3: "Vào chiều (3)",
+        thSlot4: "Ra chiều (4)",
+        thHours: "Giờ làm",
+        thStatus: "Trạng thái",
+        notFoundPrompt: "Không tìm thấy dữ liệu chấm công cho nhân viên này trong khoảng thời gian đã chọn.",
+      },
+      zh: {
+        subtitle: "萬和包裝（富壽）有限公司 · 員工服務專區",
+        tabAttendance: "出勤打卡查詢",
+        tabRegulations: "員工管理規章",
+        queryTitle: "員工考勤打卡查詢",
+        queryDesc: "輸入員工工號並點擊【查詢】按鈕，查看您的每日四時段打卡時間與工作天數。",
+        btnUpload: "載入 Excel / JSON 檔案",
+        labelEmpInput: "員工工號 (或姓名):",
+        placeholderEmpInput: "例如：EMP-001, VH001 或姓名...",
+        labelMonthInput: "月份篩選:",
+        btnSearch: "查詢",
+        promptTitle: "請在上方輸入員工工號開始查詢",
+        promptDesc: "系統保護員工個人隱私。輸入個人工號後，僅會顯示您自己的打卡明細與當月出勤統計。",
+        lblDays: "出勤天數",
+        lblHoursPrefix: "累計工時:",
+        lblNormal: "正常出勤",
+        lblNormalSub: "準時到勤",
+        lblLate: "遲到 / 早退",
+        lblLateSub: "上午 08:00 後",
+        lblLeave: "特休 / 請假",
+        lblLeaveSub: "年假 / 准假",
+        lblAbsent: "曠工 / 缺勤",
+        lblAbsentSub: "未經准假",
+        tableHeadTitle: "每日四時段打卡紀錄明細",
+        thDate: "出勤日期",
+        thWeekday: "星期",
+        thSlot1: "上班 1 (上午進)",
+        thSlot2: "下班 1 (午休出)",
+        thSlot3: "上班 2 (午後進)",
+        thSlot4: "下班 2 (下午退)",
+        thHours: "工作工時",
+        thStatus: "出勤狀態",
+        notFoundPrompt: "在指定月份內未找到該工號的出勤打卡紀錄，請確認工號是否正確。",
+      },
+      bilingual: {
+        subtitle: "萬和包裝（富壽）有限公司 · 員工服務專區 (Cổng thông tin nhân viên)",
+        tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
+        tabRegulations: "Nội quy & Quy chế (員工管理規章)",
+        queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
+        queryDesc: "Nhập mã nhân viên và nhấn [Tra cứu] / 請輸入工號並點選查詢。",
+        btnUpload: "Nạp file Excel / JSON",
+        labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
+        placeholderEmpInput: "Ví dụ / 例如: EMP-001, VH001...",
+        labelMonthInput: "Tháng / 月份篩選:",
+        btnSearch: "Tra cứu (查詢)",
+        promptTitle: "Vui lòng nhập Mã nhân viên (請輸入工號查詢)",
+        promptDesc: "Hệ thống bảo mật thông tin cá nhân. Chỉ hiển thị dữ liệu của chính bạn sau khi nhập Mã NV (工號)。",
+        lblDays: "Số ngày công (出勤天數)",
+        lblHoursPrefix: "Tổng giờ / 總工時:",
+        lblNormal: "Bình thường (正常)",
+        lblNormalSub: "Đúng giờ (準時)",
+        lblLate: "Đi muộn/Về sớm (遲到早退)",
+        lblLateSub: "Sau 08:00 (遲到)",
+        lblLeave: "Nghỉ phép (請假)",
+        lblLeaveSub: "Phép năm / 特休准假",
+        lblAbsent: "Vắng mặt (曠工缺勤)",
+        lblAbsentSub: "Không phép (曠職)",
+        tableHeadTitle: "Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)",
+        thDate: "Ngày (日期)",
+        thWeekday: "Thứ (星期)",
+        thSlot1: "Vào 1 (上班 1)",
+        thSlot2: "Ra 1 (午休出)",
+        thSlot3: "Vào 2 (午後進)",
+        thSlot4: "Ra 2 (下班 2)",
+        thHours: "Giờ làm (工時)",
+        thStatus: "Trạng thái (狀態)",
+        notFoundPrompt: "Không tìm thấy dữ liệu phù hợp với Mã NV này. (未查到該工號紀錄)",
+      }
+    };
+
+    // ERP Exact Status Definitions (Labels & Colors)
+    const ERP_STATUSES = {
+      normal: {
+        vi: "Bình thường",
+        zh: "正常",
+        bi: "正常 (Bình thường)",
+        color: "bg-emerald-100 text-emerald-800 border-emerald-200"
+      },
+      late: {
+        vi: "Đi muộn",
+        zh: "遲到",
+        bi: "遲到 (Đi muộn)",
+        color: "bg-amber-100 text-amber-800 border-amber-200"
+      },
+      early_leave: {
+        vi: "Về sớm",
+        zh: "早退",
+        bi: "早退 (Về sớm)",
+        color: "bg-orange-100 text-orange-800 border-orange-200"
+      },
+      absent: {
+        vi: "Vắng mặt/Nghỉ không phép",
+        zh: "曠工/缺勤",
+        bi: "曠工 (Vắng mặt)",
+        color: "bg-rose-100 text-rose-800 border-rose-200"
+      },
+      annual_leave: {
+        vi: "Phép năm",
+        zh: "特休/年假",
+        bi: "特休/年假 (Phép năm)",
+        color: "bg-cyan-100 text-cyan-800 border-cyan-200"
+      },
+      marriage_leave: {
+        vi: "Nghỉ kết hôn",
+        zh: "婚假",
+        bi: "婚假 (Nghỉ kết hôn)",
+        color: "bg-pink-100 text-pink-800 border-pink-200"
+      },
+      funeral_leave: {
+        vi: "Nghỉ tang",
+        zh: "喪假",
+        bi: "喪假 (Nghỉ tang)",
+        color: "bg-purple-100 text-purple-800 border-purple-200"
+      },
+      sick_leave: {
+        vi: "Nghỉ ốm (BHXH)",
+        zh: "病假 (BHXH)",
+        bi: "病假 (Nghỉ ốm/BHXH)",
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200"
+      },
+      maternity_leave: {
+        vi: "Nghỉ thai sản (BHXH)",
+        zh: "產假 (BHXH)",
+        bi: "產假 (Nghỉ thai sản)",
+        color: "bg-rose-100 text-rose-700 border-rose-200"
+      },
+      unpaid_leave: {
+        vi: "Nghỉ không lương (Việc riêng)",
+        zh: "事假/無薪假",
+        bi: "事假 (Nghỉ không lương)",
+        color: "bg-indigo-100 text-indigo-800 border-indigo-200"
+      },
+      leave: {
+        vi: "Nghỉ phép",
+        zh: "一般請假",
+        bi: "請假 (Nghỉ phép)",
+        color: "bg-blue-100 text-blue-800 border-blue-200"
+      }
+    };
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem("portal_lang", lang);
+
+      // Button styles
+      ["vi", "zh", "bi"].forEach(k => {
+        const btn = document.getElementById("lang-btn-" + k);
+        if ((k === "bi" && lang === "bilingual") || k === lang) {
+          btn.className = "px-2.5 py-1 rounded-lg font-bold transition bg-sky-500 text-white shadow-sm";
+        } else {
+          btn.className = "px-2.5 py-1 rounded-lg font-medium transition text-blue-200 hover:text-white";
+        }
+      });
+
+      const t = I18N[lang] || I18N.vi;
+      document.getElementById("header-subtitle").innerText = t.subtitle;
+      document.getElementById("tab-title-attendance").innerText = t.tabAttendance;
+      document.getElementById("tab-title-regulations").innerText = t.tabRegulations;
+      document.getElementById("query-card-title").querySelector("span").innerText = t.queryTitle;
+      document.getElementById("query-card-desc").innerText = t.queryDesc;
+      document.getElementById("btn-upload-label").innerText = t.btnUpload;
+      document.getElementById("label-emp-input").innerHTML = `${t.labelEmpInput} <span class="text-rose-500">*</span>`;
+      document.getElementById("input-emp-code").placeholder = t.placeholderEmpInput;
+      document.getElementById("label-month-input").innerText = t.labelMonthInput;
+      document.getElementById("btn-search-text").innerText = t.btnSearch;
+      document.getElementById("prompt-title").innerText = t.promptTitle;
+      document.getElementById("prompt-desc").innerText = t.promptDesc;
+
+      document.getElementById("stat-lbl-days").innerText = t.lblDays;
+      document.getElementById("stat-lbl-hours-prefix").innerText = t.lblHoursPrefix;
+      document.getElementById("stat-lbl-normal").innerText = t.lblNormal;
+      document.getElementById("stat-lbl-normal-sub").innerText = t.lblNormalSub;
+      document.getElementById("stat-lbl-late").innerText = t.lblLate;
+      document.getElementById("stat-lbl-late-sub").innerText = t.lblLateSub;
+      document.getElementById("stat-lbl-leave").innerText = t.lblLeave;
+      document.getElementById("stat-lbl-leave-sub").innerText = t.lblLeaveSub;
+      document.getElementById("stat-lbl-absent").innerText = t.lblAbsent;
+      document.getElementById("stat-lbl-absent-sub").innerText = t.lblAbsentSub;
+
+      document.getElementById("table-head-title").querySelector("span").innerText = t.tableHeadTitle;
+      document.getElementById("th-date").innerText = t.thDate;
+      document.getElementById("th-weekday").innerText = t.thWeekday;
+      document.getElementById("th-slot1").innerText = t.thSlot1;
+      document.getElementById("th-slot2").innerText = t.thSlot2;
+      document.getElementById("th-slot3").innerText = t.thSlot3;
+      document.getElementById("th-slot4").innerText = t.thSlot4;
+      document.getElementById("th-hours").innerText = t.thHours;
+      document.getElementById("th-status").innerText = t.thStatus;
+
+      renderRegulations();
+      if (currentEmployeeCode) {
+        doSearch();
+      }
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.getElementById("tab-attendance").classList.toggle("hidden", tabId !== "attendance");
+      document.getElementById("tab-regulations").classList.toggle("hidden", tabId !== "regulations");
+
+      const attBtn = document.getElementById("tab-attendance-btn");
+      const regBtn = document.getElementById("tab-regulations-btn");
+
+      if (tabId === "attendance") {
+        attBtn.className = "tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-sky-400";
+        regBtn.className = "tab-btn py-3 text-sm font-medium flex items-center gap-2 text-blue-200 hover:text-white";
+      } else {
+        regBtn.className = "tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-sky-400";
+        attBtn.className = "tab-btn py-3 text-sm font-medium flex items-center gap-2 text-blue-200 hover:text-white";
+      }
+      lucide.createIcons();
+    }
+
+    // Auto-load data file on init
+    async function loadInitialData() {
+      const candidates = ["attendance_data.json", "attendance.json", "attendance.xlsx"];
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            if (url.endsWith(".json")) {
+              const data = await res.json();
+              allRecords = data.records || data || [];
+              console.log("Loaded JSON:", allRecords.length);
+              return;
+            } else if (url.endsWith(".xlsx")) {
+              const arrayBuf = await res.arrayBuffer();
+              parseExcelArrayBuffer(arrayBuf, url);
+              return;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
+    function reloadDefaultData() {
+      loadInitialData().then(() => {
+        alert("Đã tải lại dữ liệu! / 資料已重新整理！");
+        if (currentEmployeeCode) doSearch();
+      });
+    }
+
+    // Manual upload parser
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      if (file.name.endsWith(".json")) {
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            allRecords = data.records || data || [];
+            alert(`Nạp thành công ${allRecords.length} bản ghi! / 成功載入 ${allRecords.length} 筆資料！`);
+            if (currentEmployeeCode) doSearch();
+          } catch (err) {
+            alert("Lỗi đọc file JSON: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = (event) => {
+          try {
+            parseExcelArrayBuffer(event.target.result, file.name);
+            alert(`Nạp thành công ${allRecords.length} bản ghi Excel! / 成功載入 ${allRecords.length} 筆 Excel！`);
+            if (currentEmployeeCode) doSearch();
+          } catch (err) {
+            alert("Lỗi đọc file Excel: " + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function parseExcelArrayBuffer(buf, filename) {
+      const wb = XLSX.read(buf, { type: "array" });
+      const firstSheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[firstSheetName];
+      const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      let headerIndex = -1;
+      for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
+        const rowStr = (rawRows[i] || []).join(" ").toLowerCase();
+        if (rowStr.includes("mã nv") || rowStr.includes("工號") || rowStr.includes("ngày") || rowStr.includes("họ và tên")) {
+          headerIndex = i;
+          break;
+        }
+      }
+      if (headerIndex === -1) headerIndex = 4;
+
+      const headers = rawRows[headerIndex] || [];
+      const colMap = {};
+      headers.forEach((h, idx) => {
+        const str = String(h || "").toLowerCase();
+        if (str.includes("mã nv") || str.includes("工號")) colMap.emp_code = idx;
+        else if (str.includes("họ và tên") || str.includes("姓名")) colMap.name = idx;
+        else if (str.includes("bộ phận") || str.includes("部門")) colMap.department = idx;
+        else if (str.includes("chức vụ") || str.includes("職務")) colMap.position = idx;
+        else if (str.includes("ngày") || str.includes("日期")) colMap.date = idx;
+        else if (str.includes("thứ") || str.includes("星期")) colMap.weekday = idx;
+        else if (str.includes("vào 1") || str.includes("上班 1") || str.includes("vào sáng") || (str.includes("giờ vào") && colMap.slot1 === undefined)) colMap.slot1 = idx;
+        else if (str.includes("ra 1") || str.includes("下班 1") || str.includes("ra trưa")) colMap.slot2 = idx;
+        else if (str.includes("vào 2") || str.includes("上班 2") || str.includes("vào chiều")) colMap.slot3 = idx;
+        else if (str.includes("ra 2") || str.includes("下班 2") || str.includes("ra chiều") || str.includes("giờ ra")) colMap.slot4 = idx;
+        else if (str.includes("giờ làm") || str.includes("工時")) colMap.work_hours = idx;
+        else if (str.includes("mã tt") || str.includes("狀態代碼")) colMap.status = idx;
+      });
+
+      const parsed = [];
+      for (let i = headerIndex + 1; i < rawRows.length; i++) {
+        const row = rawRows[i];
+        if (!row || !row[colMap.emp_code || 1]) continue;
+
+        parsed.push({
+          employee_code: String(row[colMap.emp_code] || "").trim(),
+          name: String(row[colMap.name] || "").trim(),
+          department: String(row[colMap.department] || "生產部").trim(),
+          position: String(row[colMap.position] || "作業員").trim(),
+          date: String(row[colMap.date] || "").trim(),
+          weekday_vi: String(row[colMap.weekday] || "").trim(),
+          check_in: String(row[colMap.slot1] || "").trim() || null,
+          lunch_out: String(row[colMap.slot2] || "").trim() || null,
+          lunch_in: String(row[colMap.slot3] || "").trim() || null,
+          check_out: String(row[colMap.slot4] || "").trim() || null,
+          work_hours: parseFloat(row[colMap.work_hours]) || 0,
+          status: String(row[colMap.status] || "normal").trim(),
+        });
+      }
+      allRecords = parsed;
+    }
+
+    // ==================== SEARCH & QUERY LOGIC ====================
+    function doSearch() {
+      const q = document.getElementById("input-emp-code").value.trim().toLowerCase();
+      const monthFilter = document.getElementById("input-month").value;
+
+      if (!q) {
+        alert("Vui lòng nhập Mã nhân viên (工號)! / 請輸入員工工號！");
+        return;
+      }
+
+      currentEmployeeCode = q;
+
+      // Filter for this specific employee only
+      const userRecords = allRecords.filter(r => {
+        const matchEmp = (r.employee_code && r.employee_code.toLowerCase().includes(q)) ||
+                         (r.name && r.name.toLowerCase().includes(q)) ||
+                         (r.att_system_id && String(r.att_system_id).toLowerCase().includes(q));
+        const matchMonth = !monthFilter || (r.date && r.date.startsWith(monthFilter));
+        return matchEmp && matchMonth;
+      });
+
+      if (userRecords.length === 0) {
+        const t = I18N[currentLang] || I18N.vi;
+        document.getElementById("prompt-before-search").classList.remove("hidden");
+        document.getElementById("search-result-container").classList.add("hidden");
+        document.getElementById("prompt-title").innerText = "Không tìm thấy dữ liệu (未查到出勤紀錄)";
+        document.getElementById("prompt-desc").innerText = t.notFoundPrompt;
+        return;
+      }
+
+      // Hide prompt, show results
+      document.getElementById("prompt-before-search").classList.add("hidden");
+      document.getElementById("search-result-container").classList.remove("hidden");
+
+      // Set Banner Info
+      const first = userRecords[0];
+      document.getElementById("res-emp-name").innerText = first.name || "—";
+      document.getElementById("res-emp-code").innerText = first.employee_code || "—";
+      document.getElementById("res-emp-dept-pos").innerText = `${first.department || "生產部"} · ${first.position || "作業員"}`;
+      document.getElementById("res-month-badge").innerText = monthFilter ? `Kỳ: ${monthFilter}` : `Tổng: ${userRecords.length} ngày`;
+
+      // Calculate Stats
+      let totalDays = 0;
+      let totalHours = 0;
+      let normalCount = 0;
+      let lateCount = 0;
+      let leaveCount = 0;
+      let absentCount = 0;
+
+      userRecords.forEach(r => {
+        totalDays++;
+        totalHours += parseFloat(r.work_hours || 0);
+        const s = (r.status || "").toLowerCase();
+        if (s === "normal") normalCount++;
+        else if (s === "late" || s === "early_leave") lateCount++;
+        else if (s === "absent") absentCount++;
+        else leaveCount++;
+      });
+
+      document.getElementById("stat-total-days").innerText = totalDays;
+      document.getElementById("stat-total-hours").innerText = totalHours.toFixed(1);
+      document.getElementById("stat-normal-days").innerText = normalCount;
+      document.getElementById("stat-late-count").innerText = lateCount;
+      document.getElementById("stat-leave-days").innerText = leaveCount;
+      document.getElementById("stat-absent-days").innerText = absentCount;
+
+      // Render 4-slot table
+      renderTable(userRecords);
+    }
+
+    function resetSearch() {
+      document.getElementById("input-emp-code").value = "";
+      document.getElementById("input-month").value = "";
+      currentEmployeeCode = "";
+      document.getElementById("prompt-before-search").classList.remove("hidden");
+      document.getElementById("search-result-container").classList.add("hidden");
+      const t = I18N[currentLang] || I18N.vi;
+      document.getElementById("prompt-title").innerText = t.promptTitle;
+      document.getElementById("prompt-desc").innerText = t.promptDesc;
+    }
+
+    function renderTable(records) {
+      const tbody = document.getElementById("attendance-tbody");
+      document.getElementById("table-showing-count").innerText = `${records.length} ngày / 筆`;
+
+      const rowsHtml = records.map(r => {
+        const badge = getStatusBadge(r.status);
+        const fmt = (v) => (v && v !== "—" ? v.slice(0, 5) : `<span class="text-slate-300 font-normal">—</span>`);
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-3 px-3.5 font-mono text-xs font-semibold text-slate-800">${r.date || "—"}</td>
+            <td class="py-3 px-3 text-xs text-center text-slate-500">${r.weekday_vi || r.weekday_zh || "—"}</td>
+            <td class="py-3 px-3 text-center font-mono font-bold text-sky-700 bg-sky-50/50">${fmt(r.check_in)}</td>
+            <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_out)}</td>
+            <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_in)}</td>
+            <td class="py-3 px-3 text-center font-mono font-bold text-indigo-700 bg-indigo-50/50">${fmt(r.check_out)}</td>
+            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800">${parseFloat(r.work_hours || 0).toFixed(1)}h</td>
+            <td class="py-3 px-4 text-center">${badge}</td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.innerHTML = rowsHtml;
+      lucide.createIcons();
+    }
+
+    function getStatusBadge(statusCode) {
+      const code = (statusCode || "normal").toLowerCase();
+      const def = ERP_STATUSES[code] || ERP_STATUSES.normal;
+
+      let text = def.vi;
+      if (currentLang === "zh") text = def.zh;
+      else if (currentLang === "bilingual") text = def.bi;
+
+      return `<span class="px-2.5 py-1 rounded-full text-xs font-bold border ${def.color} inline-block whitespace-nowrap" translate="no">${text}</span>`;
+    }
+
+    // ==================== REGULATIONS CONTENT ====================
+    function renderRegulations() {
+      const container = document.getElementById("regulations-content");
+      const isZh = currentLang === "zh";
+      const isBi = currentLang === "bilingual";
+
+      let noticeTitle = "Nội dung đang được cập nhật & xây dựng";
+      let noticeSub = "Quy chế và nội quy lao động chính thức của công ty đang trong quá trình hoàn thiện văn bản. Xin vui lòng quay lại sau.";
+
+      if (isZh) {
+        noticeTitle = "員工管理規章內容建置中";
+        noticeSub = "公司正式勞動規章與各項管理辦法目前正在整理建置中，敬請期待。";
+      } else if (isBi) {
+        noticeTitle = "Nội dung đang được xây dựng / 規章內容建置中";
+        noticeSub = "Quy chế lao động chính thức đang được hoàn thiện / 公司正式管理規章與辦法建置中，敬請期待。";
+      }
+
+      container.innerHTML = `
+        <div class="py-16 px-4 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 mb-4 ring-8 ring-amber-50/50">
+            <i data-lucide="construction" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">
+            ${noticeTitle}
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+            ${noticeSub}
+          </p>
+          <div class="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span>Coming soon · Sắp ra mắt</span>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      setLanguage(currentLang);
+      loadInitialData();
+    });
+  </script>
+</body>
+</html>
