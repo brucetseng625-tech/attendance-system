@@ -555,19 +555,39 @@
 
     // Auto-load data file on init
     async function loadInitialData() {
-      const candidates = ["attendance_data.json", "attendance.json", "attendance.xlsx"];
+      // Check if user previously uploaded a custom file in this browser
+      try {
+        const cached = localStorage.getItem("portal_offline_attendance");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            allRecords = parsed;
+            console.log("Loaded cached records:", allRecords.length);
+          }
+        }
+      } catch (e) {}
+
+      // Always fetch latest data from server with cache-busting timestamp
+      const nocache = "_t=" + Date.now();
+      const candidates = [
+        `attendance_data.json?${nocache}`,
+        `attendance.json?${nocache}`,
+        `attendance.xlsx?${nocache}`
+      ];
       for (const url of candidates) {
         try {
-          const res = await fetch(url);
+          const res = await fetch(url, { cache: "no-store" });
           if (res.ok) {
-            if (url.endsWith(".json")) {
+            if (url.includes(".json")) {
               const data = await res.json();
               allRecords = data.records || data || [];
-              console.log("Loaded JSON:", allRecords.length);
+              console.log("Loaded latest JSON from server:", allRecords.length);
+              try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
               return;
-            } else if (url.endsWith(".xlsx")) {
+            } else if (url.includes(".xlsx")) {
               const arrayBuf = await res.arrayBuffer();
               parseExcelArrayBuffer(arrayBuf, url);
+              try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
               return;
             }
           }
@@ -579,7 +599,7 @@
 
     function reloadDefaultData() {
       loadInitialData().then(() => {
-        alert("Đã tải lại dữ liệu! / 資料已重新整理！");
+        alert("Đã tải lại dữ liệu mới nhất! / 已重新整理並載入最新資料！");
         if (currentEmployeeCode) doSearch();
       });
     }
@@ -595,6 +615,7 @@
           try {
             const data = JSON.parse(event.target.result);
             allRecords = data.records || data || [];
+            try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
             alert(`Nạp thành công ${allRecords.length} bản ghi! / 成功載入 ${allRecords.length} 筆資料！`);
             if (currentEmployeeCode) doSearch();
           } catch (err) {
@@ -606,6 +627,7 @@
         reader.onload = (event) => {
           try {
             parseExcelArrayBuffer(event.target.result, file.name);
+            try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
             alert(`Nạp thành công ${allRecords.length} bản ghi Excel! / 成功載入 ${allRecords.length} 筆 Excel！`);
             if (currentEmployeeCode) doSearch();
           } catch (err) {
