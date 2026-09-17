@@ -339,6 +339,8 @@
         thHours: "Giờ làm",
         thStatus: "Trạng thái",
         notFoundPrompt: "Không tìm thấy dữ liệu chấm công cho nhân viên này trong khoảng thời gian đã chọn.",
+        regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ CÔNG TY",
+        regMainSub: "CÔNG TY TNHH BAO BÌ WANHE (PHÚ THỌ) · VĂN BẢN QUY ĐỊNH CHÍNH THỨC (V1.4)",
       },
       zh: {
         subtitle: "萬和包裝（富壽）有限公司 · 員工服務專區",
@@ -373,6 +375,8 @@
         thHours: "工作工時",
         thStatus: "出勤狀態",
         notFoundPrompt: "在指定月份內未找到該工號的出勤打卡紀錄，請確認工號是否正確。",
+        regMainTitle: "萬和包裝（富壽）有限公司 · 員工管理規章與工作守則",
+        regMainSub: "總經理核准正式頒布施行 · 正式版本 V1.4 (紙箱紙板製造與印刷)",
       },
       bilingual: {
         subtitle: "萬和包裝（富壽）有限公司 · 員工服務專區 (Cổng thông tin nhân viên)",
@@ -407,6 +411,8 @@
         thHours: "Giờ làm (工時)",
         thStatus: "Trạng thái (狀態)",
         notFoundPrompt: "Không tìm thấy dữ liệu phù hợp với Mã NV này. (未查到該工號紀錄)",
+        regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ / 員工管理規章",
+        regMainSub: "WANHE PHÚ THỌ · 萬和包裝（富壽）有限公司 (V1.4 正式版 / Bản chính thức)",
       }
     };
 
@@ -498,6 +504,12 @@
       document.getElementById("header-subtitle").innerText = t.subtitle;
       document.getElementById("tab-title-attendance").innerText = t.tabAttendance;
       document.getElementById("tab-title-regulations").innerText = t.tabRegulations;
+      if (document.getElementById("reg-main-title") && t.regMainTitle) {
+        document.getElementById("reg-main-title").innerText = t.regMainTitle;
+      }
+      if (document.getElementById("reg-main-sub") && t.regMainSub) {
+        document.getElementById("reg-main-sub").innerText = t.regMainSub;
+      }
       document.getElementById("query-card-title").querySelector("span").innerText = t.queryTitle;
       document.getElementById("query-card-desc").innerText = t.queryDesc;
       document.getElementById("btn-upload-label").innerText = t.btnUpload;
@@ -813,40 +825,385 @@
       return `<span class="px-2.5 py-1 rounded-full text-xs font-bold border ${def.color} inline-block whitespace-nowrap" translate="no">${text}</span>`;
     }
 
-    // ==================== REGULATIONS CONTENT ====================
+    // ==================== REGULATIONS CONTENT & INTERACTIVE READER ====================
+    let currentRulePage = 1;
+    const TOTAL_RULE_PAGES = 12;
+    let rulesViewMode = "continuous"; // 'continuous' (長圖流暢滾動) or 'single' (逐頁模式)
+
+    const RULE_PAGE_TITLES = [
+      { vi: "Trang 1: Trang bìa & Quyết định ban hành (V1.4)", zh: "第 1 頁：規章封面與總經理核准簽署 (V1.4)", bi: "Trang 1 / 第 1 頁: Bìa văn bản (規章封面)" },
+      { vi: "Trang 2: Chương I. Quy định chung & Thời giờ làm việc", zh: "第 2 頁：第一章 總則與正常工時規範", bi: "Trang 2 / 第 2 頁: Quy định chung & Thời giờ (總則與工時)" },
+      { vi: "Trang 3: Quy định chấm công, đi muộn & trừ giờ", zh: "第 3 頁：打卡紀律、遲到寬限與請假折抵", bi: "Trang 3 / 第 3 頁: Chấm công & Đi muộn (打卡與遲到規約)" },
+      { vi: "Trang 4: Chương III. Nghỉ phép năm & Nghỉ việc riêng", zh: "第 4 頁：第三章 特休年假、婚喪假與排休", bi: "Trang 4 / 第 4 頁: Nghỉ phép năm & Việc riêng (特休與各類假別)" },
+      { vi: "Trang 5: Chương V. Trang phục, giày dép & BHLĐ", zh: "第 5 頁：第五章 服裝穿鞋規定與個人防護 PPE", bi: "Trang 5 / 第 5 頁: Trang phục & BHLĐ (服裝與安全防護)" },
+      { vi: "Trang 6: Chương VI. An toàn lao động, máy móc & xe nâng", zh: "第 6 頁：第六章 設備操作安全、停機 SOP 與堆高機", bi: "Trang 6 / 第 6 頁: An toàn máy móc & Xe nâng (機台與搬運安全)" },
+      { vi: "Trang 7: Lối thoát nạn, PCCC & 5S nơi làm việc", zh: "第 7 頁：第七章 逃生通道、消防安全與 5S", bi: "Trang 7 / 第 7 頁: PCCC & Môi trường 5S (消防與現場環境)" },
+      { vi: "Trang 8: Báo cáo tai nạn & sự cố nghiêm trọng", zh: "第 8 頁：第八章 重大事故、工傷通報與緊急應變", bi: "Trang 8 / 第 8 頁: Báo cáo tai nạn & Sự cố (事故與通報責任)" },
+      { vi: "Trang 9: Phòng chống quấy rối tình dục & Khiếu nại", zh: "第 9 頁：第九章 防範職場性騷擾、舉報與保護", bi: "Trang 9 / 第 9 頁: Phòng quấy rối & Khiếu nại (防範性騷擾與申訴)" },
+      { vi: "Trang 10: Quy trình xử lý kỷ luật lao động", zh: "第 10 頁：第十章 勞動紀律處分法定程序與申辯權", bi: "Trang 10 / 第 10 頁: Kỷ luật lao động (勞動紀律處理程序)" },
+      { vi: "Trang 11: Trách nhiệm bồi thường vật chất", zh: "第 11 頁：第十一章 財產損壞賠償標準與扣除限制", bi: "Trang 11 / 第 11 頁: Bồi thường vật chất (財產損害賠償規範)" },
+      { vi: "Trang 12: Bảng tổng hợp các chế độ nghỉ & BHXH", zh: "第 12 頁：第十二章 各類休假、產假與社保總表", bi: "Trang 12 / 第 12 頁: Bảng tổng hợp chế độ nghỉ (各類休假總表)" }
+    ];
+
+    function setRulesViewMode(mode) {
+      rulesViewMode = mode;
+      renderRegulations();
+    }
+
+    function switchRulePage(pageNum) {
+      currentRulePage = Math.max(1, Math.min(TOTAL_RULE_PAGES, pageNum));
+      if (rulesViewMode === "continuous") {
+        const target = document.getElementById(`rule-page-card-${currentRulePage}`);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      }
+      renderRegulations();
+    }
+
     function renderRegulations() {
       const container = document.getElementById("regulations-content");
+      if (!container) return;
+
       const isZh = currentLang === "zh";
       const isBi = currentLang === "bilingual";
 
-      let noticeTitle = "Nội dung đang được cập nhật & xây dựng";
-      let noticeSub = "Quy chế và nội quy lao động chính thức của công ty đang trong quá trình hoàn thiện văn bản. Xin vui lòng quay lại sau.";
+      const texts = {
+        badgeOfficial: isZh ? "正式核准版本 · Bản chính thức" : (isBi ? "Bản chính thức · 正式核准 (V1.4)" : "Bản chính thức (V1.4)"),
+        docCodeLabel: isZh ? "文件編號" : (isBi ? "Mã hiệu / 編號" : "Mã số văn bản"),
+        docCode: "NQLĐ-WHPT-2026-V1.4",
+        versionLabel: isZh ? "版本" : (isBi ? "Phiên bản / 版本" : "Phiên bản"),
+        versionVal: "V1.4",
+        approverLabel: isZh ? "簽署核准人" : (isBi ? "Phê duyệt / 核准" : "Người phê duyệt"),
+        approverVal: isZh ? "總經理 (Giám đốc)" : (isBi ? "Giám đốc / 總經理" : "Giám đốc Công ty"),
+        scopeLabel: isZh ? "適用範圍" : (isBi ? "Phạm vi / 適用" : "Phạm vi áp dụng"),
+        scopeVal: isZh ? "萬和富壽廠全體員工（紙箱紙板製造與印刷）" : (isBi ? "Toàn bộ CBCNV Nhà máy Phú Thọ (富壽廠全體員工)" : "Toàn thể CBCNV Nhà máy Bao bì Wanhe Phú Thọ"),
+        docFormatLabel: isZh ? "文件規格" : (isBi ? "Quy cách / 規格" : "Quy cách tài liệu"),
+        docFormatVal: isZh ? "越中雙語對照正式掃描檔共 12 頁 (PDF / 高清圖片)" : (isBi ? "Bản quét gốc 12 trang song ngữ Việt - Trung (PDF / Ảnh)" : "Bản quét gốc 12 trang song ngữ Việt - Trung (12 trang)"),
 
-      if (isZh) {
-        noticeTitle = "員工管理規章內容建置中";
-        noticeSub = "公司正式勞動規章與各項管理辦法目前正在整理建置中，敬請期待。";
-      } else if (isBi) {
-        noticeTitle = "Nội dung đang được xây dựng / 規章內容建置中";
-        noticeSub = "Quy chế lao động chính thức đang được hoàn thiện / 公司正式管理規章與辦法建置中，敬請期待。";
+        btnOpenFullscreen: isZh ? "在新分頁開啟原始 PDF" : (isBi ? "Mở file PDF gốc / 原始 PDF" : "Mở file PDF gốc"),
+        btnDownload: isZh ? "下載完整規章 PDF (9.4 MB)" : (isBi ? "Tải xuống file PDF (9.4 MB)" : "Tải xuống tài liệu PDF (9.4 MB)"),
+
+        summaryHeading: isZh ? "核心管理條款快查導覽" : (isBi ? "TÓM TẮT ĐIỀU KHOẢN CỐT LÕI / 核心條款導覽" : "TÓM TẮT CÁC ĐIỀU KHOẢN CỐT LÕI"),
+        summarySub: isZh ? "依據富壽萬和正式員工管理手冊整理，便於現場同仁隨時查閱遵守" : (isBi ? "Trích lược từ Nội quy chính thức V1.4 phục vụ tra cứu nhanh / 依 V1.4 正式規章重點摘要" : "Trích lược từ Nội quy lao động chính thức V1.4 giúp người lao động nắm rõ quyền lợi và trách nhiệm"),
+
+        readerHeading: isZh ? "線上正式規章全文閱覽 (共 12 頁)" : (isBi ? "ĐỌC NỘI QUY TRỰC TUYẾN (12 TRANG) / 全文線上閱覽" : "ĐỌC TOÀN VĂN NỘI QUY CHÍNH THỨC (12 TRANG)"),
+        readerSub: isZh ? "採用高清晰原件逐頁最佳化呈現，支援手機端順暢滑動、縮放與免安裝外掛" : (isBi ? "Hiển thị ảnh quét sắc nét, tương thích 100% điện thoại / 高清掃描相容所有手機" : "Hiển thị ảnh quét sắc nét từ bản gốc có chữ ký Giám đốc, hỗ trợ mượt mà trên mọi điện thoại di động"),
+
+        modeContinuous: isZh ? "📜 連續長圖向下滑動 (推薦手機)" : (isBi ? "📜 Cuộn liên tục / 連續長圖" : "📜 Cuộn liên tục (12 trang)"),
+        modeSingle: isZh ? "📄 逐頁單頁翻閱" : (isBi ? "📄 Từng trang / 逐頁翻閱" : "📄 Xem từng trang"),
+        jumpLabel: isZh ? "跳轉至章節：" : (isBi ? "Chuyển trang / 跳頁:" : "Chuyển nhanh đến trang:"),
+        btnPrev: isZh ? "← 上一頁" : "← Trang trước",
+        btnNext: isZh ? "下一頁 →" : "Trang sau →",
+        pdfBackupHeading: isZh ? "原始 PDF 檔案下載與內嵌備查" : (isBi ? "TẢI FILE PDF GỐC (9.4 MB) / 原始 PDF 下載" : "TẢI VÀ XEM FILE PDF GỐC (9.4 MB)"),
+        pdfBackupSub: isZh ? "若您需要列印或保存蓋印掃描原檔，可點此下載或於電腦端檢視" : (isBi ? "Tải bản gốc phục vụ in ấn hoặc lưu trữ / 下載原件供列印存查" : "Tải bản gốc có chữ ký phê duyệt phục vụ in ấn hoặc lưu trữ")
+      };
+
+      const cards = [
+        {
+          icon: "clock",
+          iconBg: "bg-blue-100",
+          iconText: "text-blue-700",
+          title: isZh ? "第一條：工作時間與打卡紀律" : (isBi ? "1. Thời giờ làm việc & Chấm công (工作工時與打卡)" : "1. Thời giờ làm việc & Chấm công"),
+          desc: isZh 
+            ? "標準正常班為 08:00 - 17:00（或依產線排班）。進出廠區必須親自打卡，嚴禁代打卡。遲到 5 分鐘以內每人每月寬限最多 2 次（不扣薪但記入考勤考核）。當月第 3 次遲到起或遲到超過 30 分鐘，必須依規程辦理請假折算（每 30 分鐘折抵 0.5 小時假）。"
+            : (isBi 
+              ? "Ca làm việc chuẩn 08:00 - 17:00 (hoặc theo ca phân công). Nghiêm cấm tuyệt đối việc chấm công hộ dưới mọi hình thức. Đi muộn ≤ 5 phút được miễn trừ phạt tiền tối đa 2 lần/tháng (vẫn ghi nhận chuyên cần). Từ lần 3 hoặc muộn > 30 phút phải làm thủ tục xin nghỉ theo nấc 30 phút = 0.5 giờ."
+              : "Ca chuẩn 08:00 - 17:00 (hoặc theo ca). Phải tự mình bấm giờ, nghiêm cấm chấm công hộ dưới mọi hình thức. Đi muộn trong 05 phút tối đa 2 lần/tháng được miễn trừ phạt lương (nhưng tính vào chuyên cần). Từ lần thứ 3 hoặc muộn trên 30 phút bắt buộc tính thủ tục xin nghỉ phép.")
+        },
+        {
+          icon: "calendar-check",
+          iconBg: "bg-emerald-100",
+          iconText: "text-emerald-700",
+          title: isZh ? "第二條：請假規範與法定休假" : (isBi ? "2. Nghỉ phép năm & Nghỉ việc riêng (特休與請假)" : "2. Nghỉ phép & Các chế độ nghỉ"),
+          desc: isZh 
+            ? "工作滿 1 年享有 12 天全薪年假（隨年資遞增）。本人結婚享有 3 天全薪假；子女結婚享有 1 天全薪假；父母、配偶、子女喪假享有 3 天全薪假。女性員工享有 6 個月法定產假（依社保領取給付）。同組/同工位請假需遵守輪休原則，不可同時請假影響產線運作。"
+            : (isBi 
+              ? "Nghỉ phép năm 12 ngày/năm (tăng theo thâm niên). Bản thân kết hôn: nghỉ 03 ngày hưởng nguyên lương; Con kết hôn: 01 ngày; Tang chế bố mẹ/vợ chồng/con: 03 ngày; Thai sản 06 tháng theo BHXH. Bố trí nghỉ luân phiên trong tổ để đảm bảo dây chuyền sản xuất."
+              : "Người lao động làm đủ 12 tháng được nghỉ phép năm 12 ngày hưởng nguyên lương. Bản thân kết hôn: 03 ngày; con kết hôn: 01 ngày; tang chế tứ thân phụ mẫu/vợ chồng/con: 03 ngày hưởng nguyên lương. Nghỉ thai sản 06 tháng theo luật BHXH.")
+        },
+        {
+          icon: "wallet",
+          iconBg: "bg-amber-100",
+          iconText: "text-amber-700",
+          title: isZh ? "第三條：薪資津貼與全勤獎金辦法" : (isBi ? "3. Tiền lương, Phụ cấp & Chuyên cần (津貼與全勤)" : "3. Tiền lương, Phụ cấp & Chuyên cần"),
+          desc: isZh 
+            ? "富壽萬和每月各項津貼標準：伙食津貼 780,000 VND、交通補貼 350,000 VND、全勤獎金 500,000 VND。全勤獎金發放標準：當月無曠工、無事假無薪假、病假 ≤ 1 天、遲到早退合計 ≤ 2 次。遲到扣款 50,000 VND/次、早退扣款 30,000 VND/次。"
+            : (isBi 
+              ? "Chính sách trợ cấp Wanhe Phú Thọ: Tiền ăn 780.000 đ/tháng, Xăng xe 350.000 đ/tháng, Chuyên cần 500.000 đ/tháng. Đạt chuyên cần: không vắng mặt, không nghỉ việc riêng không lương, ốm ≤ 1 ngày, đi muộn/về sớm ≤ 2 lần. Phạt muộn 50.000 đ, về sớm 30.000 đ."
+              : "Tiền ăn giữa ca: 780.000 VNĐ/tháng; Phụ cấp đi lại/xăng xe: 350.000 VNĐ/tháng; Thưởng chuyên cần: 500.000 VNĐ/tháng. Tiêu chuẩn chuyên cần: không vắng mặt, không nghỉ việc riêng không lương, ốm có phép ≤ 1 ngày, đi muộn hoặc về sớm cộng dồn không quá 2 lần.")
+        },
+        {
+          icon: "shield-alert",
+          iconBg: "bg-indigo-100",
+          iconText: "text-indigo-700",
+          title: isZh ? "第四條：服裝穿鞋與勞動安全衛生" : (isBi ? "4. Trang phục, Giày dép & An toàn (服裝儀容與勞安)" : "4. Trang phục & An toàn lao động"),
+          desc: isZh 
+            ? "進入廠區必須穿鞋，可穿包鞋或有後帶涼鞋，全廠區嚴禁穿拖鞋或赤腳！進入車間必須依工位穿戴勞保防護用品（耳塞、手套等）。機台清潔、排除卡紙、換刀換版必須依 SOP 確實停機斷電並掛牌（LOTO），嚴禁跨越或拆除安全防護裝置與急停開關。"
+            : (isBi 
+              ? "Bắt buộc mang giày bảo hộ hoặc sandal có quai hậu; nghiêm cấm tuyệt đối đi dép lê hoặc đi chân đất trong nhà máy! Trang bị đủ PPE (nút tai, găng tay...). Vệ sinh, gỡ kẹt giấy, bảo trì máy móc phải dừng máy và ngắt điện theo SOP; cấm tháo dỡ tấm chắn an toàn."
+              : "Toàn bộ khu vực Công ty bắt buộc mang giày hoặc sandal có quai hậu; tuyệt đối cấm đi dép lê hoặc đi chân đất. Tuân thủ trang bị bảo hộ lao động (PPE). Vệ sinh máy, xử lý kẹt giấy, thay dao/bản in phải dừng máy, ngắt nguồn theo SOP. Nghiêm cấm tháo bỏ cảm biến an toàn.")
+        },
+        {
+          icon: "flame",
+          iconBg: "bg-rose-100",
+          iconText: "text-rose-700",
+          title: isZh ? "第五條：消防安全與 5S 現場所維護" : (isBi ? "5. PCCC & Trật tự nơi làm việc 5S (消防與現場環境)" : "5. PCCC & Trật tự 5S nơi làm việc"),
+          desc: isZh 
+            ? "廠區與廠房內全面嚴禁吸菸，僅允許在指定吸菸區。走道、緊急逃生門、配電箱及滅火器前方必須隨時保持淨空暢通，嚴禁堆置原紙或成品阻擋。個人物品、水壺及餐具需放置於個人置物櫃，嚴禁放置於設備、紙堆或化學品上方。"
+            : (isBi 
+              ? "Nghiêm cấm hút thuốc lá trong khuôn viên nhà xưởng (chỉ hút tại khu vực cho phép). Giữ thông thoáng lối đi, cửa thoát hiểm, tủ điện, bình PCCC. Đồ dùng cá nhân để đúng nơi quy định, không để tùy tiện tại khu vực máy móc, giấy cuộn hoặc hóa chất in ấn."
+              : "Nghiêm cấm hút thuốc lá trong nhà xưởng (chỉ được hút tại nơi có biển báo cho phép). Luôn giữ lối đi, cửa thoát nạn, tủ điện và thiết bị PCCC sạch sẽ, không bị che chắn. Đồ cá nhân, nước uống để đúng nơi quy định; không để trên máy móc, vật liệu giấy.")
+        },
+        {
+          icon: "award",
+          iconBg: "bg-purple-100",
+          iconText: "text-purple-700",
+          title: isZh ? "第六條：勞動紀律、防騷擾與申訴權益" : (isBi ? "6. Kỷ luật, Phòng quấy rối & Khiếu nại (紀律與權益)" : "6. Kỷ luật & Bảo vệ quyền lợi"),
+          desc: isZh 
+            ? "公司嚴禁任何形式之職場言語或肢體性騷擾，建立嚴密之舉報保護機制。違紀處分嚴格遵循越南勞動法規，保障員工陳述與申辯權利，不重複處分。累計曠工達法定天數將依法終止勞動契約。員工遇權益問題可隨時向人事部或總經理反映。"
+            : (isBi 
+              ? "Nghiêm cấm hành vi quấy rối tình dục hoặc phân biệt đối xử tại nơi làm việc; bảo mật danh tính người phản ánh. Xử lý kỷ luật minh bạch, đúng luật Lao động Việt Nam, bảo đảm quyền giải trình của công nhân. Mọi thắc mắc có thể liên hệ trực tiếp Phòng Nhân sự."
+              : "Nghiêm cấm mọi hành vi mang tính chất quấy rối tình dục tại nơi làm việc. Mọi quyết định xử lý kỷ luật phải tuân thủ trình tự pháp luật Việt Nam, bảo đảm quyền trình bày và tự bào chữa của người lao động. Người lao động có quyền phản ánh đến Nhân sự hoặc Giám đốc.")
+        }
+      ];
+
+      const cardsHtml = cards.map(c => `
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-blue-300 hover:shadow-sm transition">
+          <div class="flex items-start gap-3">
+            <div class="p-2 rounded-lg ${c.iconBg} ${c.iconText} mt-0.5 shrink-0">
+              <i data-lucide="${c.icon}" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm sm:text-base">${c.title}</h4>
+              <p class="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">${c.desc}</p>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      // Reader jump options
+      const jumpOptions = RULE_PAGE_TITLES.map((t, idx) => {
+        const pNum = idx + 1;
+        const label = isZh ? t.zh : (isBi ? t.bi : t.vi);
+        return `<option value="${pNum}" ${currentRulePage === pNum ? "selected" : ""}>${label}</option>`;
+      }).join("");
+
+      // Reader pages content
+      let readerPagesHtml = "";
+      if (rulesViewMode === "continuous") {
+        readerPagesHtml = `
+          <div class="space-y-6">
+            ${Array.from({ length: TOTAL_RULE_PAGES }).map((_, idx) => {
+              const pNum = idx + 1;
+              const titleObj = RULE_PAGE_TITLES[idx];
+              const titleText = isZh ? titleObj.zh : (isBi ? titleObj.bi : titleObj.vi);
+              return `
+                <div id="rule-page-card-${pNum}" class="bg-white rounded-2xl p-3 sm:p-5 shadow-sm border border-slate-200">
+                  <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 text-xs text-slate-500 font-medium">
+                    <span class="inline-flex items-center gap-1.5 font-bold text-slate-800 text-xs sm:text-sm">
+                      <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+                      <span>${titleText}</span>
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold tracking-wider">${pNum} / 12</span>
+                  </div>
+                  <div class="text-center overflow-hidden rounded-xl bg-slate-50 border border-slate-100">
+                    <img src="rules_pages/page_${pNum}.jpg" alt="Trang ${pNum}" class="w-full max-w-3xl mx-auto h-auto rounded-lg shadow-sm" loading="${pNum <= 2 ? 'eager' : 'lazy'}" />
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `;
+      } else {
+        const curTitle = RULE_PAGE_TITLES[currentRulePage - 1];
+        const titleText = isZh ? curTitle.zh : (isBi ? curTitle.bi : curTitle.vi);
+        readerPagesHtml = `
+          <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+            <!-- Top page navigation -->
+            <div class="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-200">
+              <button onclick="switchRulePage(${currentRulePage - 1})" ${currentRulePage <= 1 ? "disabled" : ""} 
+                class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 ${currentRulePage <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95"}">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                <span>${texts.btnPrev}</span>
+              </button>
+              
+              <div class="text-center">
+                <p class="font-bold text-slate-900 text-sm sm:text-base">${titleText}</p>
+                <p class="text-xs text-slate-400 mt-0.5">Trang ${currentRulePage} / 12</p>
+              </div>
+
+              <button onclick="switchRulePage(${currentRulePage + 1})" ${currentRulePage >= TOTAL_RULE_PAGES ? "disabled" : ""} 
+                class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 ${currentRulePage >= TOTAL_RULE_PAGES ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm"}">
+                <span>${texts.btnNext}</span>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Single page image -->
+            <div class="text-center overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-1">
+              <img src="rules_pages/page_${currentRulePage}.jpg" alt="Trang ${currentRulePage}" class="w-full max-w-3xl mx-auto h-auto rounded-lg shadow-sm" />
+            </div>
+
+            <!-- Bottom page navigation -->
+            <div class="flex items-center justify-between gap-2 pt-4 mt-4 border-t border-slate-200">
+              <button onclick="switchRulePage(${currentRulePage - 1})" ${currentRulePage <= 1 ? "disabled" : ""} 
+                class="px-3.5 py-2 rounded-xl text-xs font-semibold ${currentRulePage <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}">
+                <span>${texts.btnPrev}</span>
+              </button>
+              <span class="text-xs font-semibold text-slate-500">${currentRulePage} / ${TOTAL_RULE_PAGES}</span>
+              <button onclick="switchRulePage(${currentRulePage + 1})" ${currentRulePage >= TOTAL_RULE_PAGES ? "disabled" : ""} 
+                class="px-3.5 py-2 rounded-xl text-xs font-semibold ${currentRulePage >= TOTAL_RULE_PAGES ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"}">
+                <span>${texts.btnNext}</span>
+              </button>
+            </div>
+          </div>
+        `;
       }
 
       container.innerHTML = `
-        <div class="py-16 px-4 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 mb-4 ring-8 ring-amber-50/50">
-            <i data-lucide="construction" class="w-8 h-8"></i>
-          </div>
-          <h3 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">
-            ${noticeTitle}
-          </h3>
-          <p class="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
-            ${noticeSub}
-          </p>
-          <div class="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
-            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
-            <span>Coming soon · Sắp ra mắt</span>
+        <!-- Document Meta & Action Header Banner -->
+        <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-5 sm:p-7 shadow-md">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div class="space-y-2.5">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                <span>${texts.badgeOfficial}</span>
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                NỘI QUY LAO ĐỘNG · 員工管理規章 (V1.4)
+              </h3>
+              <p class="text-xs sm:text-sm text-blue-200/90 leading-relaxed max-w-2xl">
+                CÔNG TY TNHH BAO BÌ WANHE (PHÚ THỌ) · 萬和包裝（富壽）有限公司
+              </p>
+
+              <!-- Meta info chips -->
+              <div class="pt-2 flex flex-wrap gap-2 text-xs">
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-slate-200">
+                  <strong class="text-white">${texts.docCodeLabel}:</strong> ${texts.docCode}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-slate-200">
+                  <strong class="text-white">${texts.approverLabel}:</strong> ${texts.approverVal}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-slate-200">
+                  <strong class="text-white">${texts.docFormatLabel}:</strong> ${texts.docFormatVal}
+                </span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
+              <a href="wanhe-employee-rules.pdf" download="Wanhe_Employee_Rules_V1.4.pdf" 
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm shadow-sm transition">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>${texts.btnDownload}</span>
+              </a>
+              <a href="wanhe-employee-rules.pdf" target="_blank" rel="noopener noreferrer" 
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-sm border border-white/20 transition">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>${texts.btnOpenFullscreen}</span>
+              </a>
+            </div>
           </div>
         </div>
+
+        <!-- Section 1: Core Policies Summary -->
+        <div class="pt-2">
+          <div class="mb-4">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="bookmark-check" class="w-5 h-5 text-blue-600"></i>
+              <span>${texts.summaryHeading}</span>
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">${texts.summarySub}</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${cardsHtml}
+          </div>
+        </div>
+
+        <!-- Section 2: Online Interactive Document Reader -->
+        <div class="pt-4 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
+                <span>${texts.readerHeading}</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">${texts.readerSub}</p>
+            </div>
+
+            <!-- Controls: View Mode & Jump selector -->
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Mode buttons -->
+              <div class="flex items-center p-1 bg-slate-100 rounded-xl text-xs font-semibold border border-slate-200">
+                <button onclick="setRulesViewMode('continuous')" 
+                  class="px-3 py-1.5 rounded-lg transition ${rulesViewMode === 'continuous' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                  ${texts.modeContinuous}
+                </button>
+                <button onclick="setRulesViewMode('single')" 
+                  class="px-3 py-1.5 rounded-lg transition ${rulesViewMode === 'single' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                  ${texts.modeSingle}
+                </button>
+              </div>
+
+              <!-- Jump Dropdown -->
+              <div class="relative">
+                <select onchange="switchRulePage(parseInt(this.value))" 
+                  class="text-xs bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-medium text-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  ${jumpOptions}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reader Container (Image-based, 100% Reliable on all Phones & Browsers) -->
+          ${readerPagesHtml}
+        </div>
+
+        <!-- Section 3: Raw PDF Backup & Desktop Embed Option -->
+        <div class="pt-4">
+          <details class="group bg-slate-100/80 rounded-2xl border border-slate-200 p-4 transition">
+            <summary class="flex items-center justify-between cursor-pointer font-bold text-slate-800 text-xs sm:text-sm select-none">
+              <span class="flex items-center gap-2">
+                <i data-lucide="file-archive" class="w-4 h-4 text-blue-600"></i>
+                <span>${texts.pdfBackupHeading}</span>
+              </span>
+              <span class="text-xs font-normal text-blue-600 group-open:rotate-180 transition transform">
+                ▼
+              </span>
+            </summary>
+            
+            <div class="pt-4 space-y-3">
+              <p class="text-xs text-slate-500">${texts.pdfBackupSub}</p>
+              <div class="flex flex-wrap gap-2 pt-1">
+                <a href="wanhe-employee-rules.pdf" download="Wanhe_Employee_Rules_V1.4.pdf" 
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                  <span>${texts.btnDownload}</span>
+                </a>
+                <a href="wanhe-employee-rules.pdf" target="_blank" 
+                  class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5">
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                  <span>${texts.btnOpenFullscreen}</span>
+                </a>
+              </div>
+
+              <!-- Desktop iframe embed (hidden on small screens) -->
+              <div class="hidden sm:block pt-3">
+                <div class="w-full rounded-xl overflow-hidden border border-slate-300 bg-slate-200">
+                  <iframe 
+                    src="wanhe-employee-rules.pdf#toolbar=1&navpanes=0" 
+                    class="w-full h-[600px] border-0 bg-white" 
+                    title="Wanhe Phú Thọ Employee Rules PDF">
+                  </iframe>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
       `;
+
       lucide.createIcons();
     }
 
