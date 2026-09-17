@@ -15,6 +15,13 @@
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
     body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .tab-btn.active { border-bottom: 3px solid #38bdf8; color: #ffffff; font-weight: 700; }
+    .no-save-img {
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      -webkit-user-drag: none !important;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -870,7 +877,7 @@
       const isBi = currentLang === "bilingual";
 
       const texts = {
-        badgeOfficial: isZh ? "正式核准版本 · Bản chính thức" : (isBi ? "Bản chính thức · 正式核准 (V1.4)" : "Bản chính thức (V1.4)"),
+        badgeOfficial: isZh ? "正式核准版本 · 僅供線上查閱" : (isBi ? "Bản chính thức · Chỉ đọc trực tuyến" : "Bản chính thức · Chỉ đọc trực tuyến"),
         docCodeLabel: isZh ? "文件編號" : (isBi ? "Mã hiệu / 編號" : "Mã số văn bản"),
         docCode: "NQLĐ-WHPT-2026-V1.4",
         versionLabel: isZh ? "版本" : (isBi ? "Phiên bản / 版本" : "Phiên bản"),
@@ -879,25 +886,28 @@
         approverVal: isZh ? "總經理 (Giám đốc)" : (isBi ? "Giám đốc / 總經理" : "Giám đốc Công ty"),
         scopeLabel: isZh ? "適用範圍" : (isBi ? "Phạm vi / 適用" : "Phạm vi áp dụng"),
         scopeVal: isZh ? "萬和富壽廠全體員工（紙箱紙板製造與印刷）" : (isBi ? "Toàn bộ CBCNV Nhà máy Phú Thọ (富壽廠全體員工)" : "Toàn thể CBCNV Nhà máy Bao bì Wanhe Phú Thọ"),
-        docFormatLabel: isZh ? "文件規格" : (isBi ? "Quy cách / 規格" : "Quy cách tài liệu"),
-        docFormatVal: isZh ? "越中雙語對照正式掃描檔共 12 頁 (PDF / 高清圖片)" : (isBi ? "Bản quét gốc 12 trang song ngữ Việt - Trung (PDF / Ảnh)" : "Bản quét gốc 12 trang song ngữ Việt - Trung (12 trang)"),
+        docFormatLabel: isZh ? "閱覽規格" : (isBi ? "Định dạng / 規格" : "Quy cách tài liệu"),
+        docFormatVal: isZh ? "越中雙語對照正式版共 12 頁 (極速加載 / 僅供線上閱讀)" : (isBi ? "Bản quét 12 trang song ngữ (Tốc độ cao / Chỉ đọc)" : "Bản quét 12 trang song ngữ Việt - Trung (Tốc độ cao)"),
 
-        btnOpenFullscreen: isZh ? "在新分頁開啟原始 PDF" : (isBi ? "Mở file PDF gốc / 原始 PDF" : "Mở file PDF gốc"),
-        btnDownload: isZh ? "下載完整規章 PDF (9.4 MB)" : (isBi ? "Tải xuống file PDF (9.4 MB)" : "Tải xuống tài liệu PDF (9.4 MB)"),
+        confidentialBadge: isZh ? "內部規程 · 僅供線上查閱" : (isBi ? "Tài liệu nội bộ · Chỉ đọc trực tuyến" : "Văn bản nội bộ · Chỉ đọc trực tuyến"),
+        confidentialSub: isZh ? "已關閉下載功能，禁止複製與轉載外流" : (isBi ? "Không hỗ trợ tải xuống / 禁止下載" : "Bảo mật thông tin, không hỗ trợ tải xuống"),
 
         summaryHeading: isZh ? "核心管理條款快查導覽" : (isBi ? "TÓM TẮT ĐIỀU KHOẢN CỐT LÕI / 核心條款導覽" : "TÓM TẮT CÁC ĐIỀU KHOẢN CỐT LÕI"),
         summarySub: isZh ? "依據富壽萬和正式員工管理手冊整理，便於現場同仁隨時查閱遵守" : (isBi ? "Trích lược từ Nội quy chính thức V1.4 phục vụ tra cứu nhanh / 依 V1.4 正式規章重點摘要" : "Trích lược từ Nội quy lao động chính thức V1.4 giúp người lao động nắm rõ quyền lợi và trách nhiệm"),
 
         readerHeading: isZh ? "線上正式規章全文閱覽 (共 12 頁)" : (isBi ? "ĐỌC NỘI QUY TRỰC TUYẾN (12 TRANG) / 全文線上閱覽" : "ĐỌC TOÀN VĂN NỘI QUY CHÍNH THỨC (12 TRANG)"),
-        readerSub: isZh ? "採用高清晰原件逐頁最佳化呈現，支援手機端順暢滑動、縮放與免安裝外掛" : (isBi ? "Hiển thị ảnh quét sắc nét, tương thích 100% điện thoại / 高清掃描相容所有手機" : "Hiển thị ảnh quét sắc nét từ bản gốc có chữ ký Giám đốc, hỗ trợ mượt mà trên mọi điện thoại di động"),
+        readerSub: isZh ? "採用新一代極速 WebP 串流載入，秒開省流量，相容所有智慧型手機" : (isBi ? "Tải siêu tốc định dạng WebP, tương thích 100% điện thoại / 極速 WebP 最佳化" : "Tải siêu tốc định dạng WebP thế hệ mới, mượt mà trên mọi điện thoại di động"),
 
         modeContinuous: isZh ? "📜 連續長圖向下滑動 (推薦手機)" : (isBi ? "📜 Cuộn liên tục / 連續長圖" : "📜 Cuộn liên tục (12 trang)"),
         modeSingle: isZh ? "📄 逐頁單頁翻閱" : (isBi ? "📄 Từng trang / 逐頁翻閱" : "📄 Xem từng trang"),
         jumpLabel: isZh ? "跳轉至章節：" : (isBi ? "Chuyển trang / 跳頁:" : "Chuyển nhanh đến trang:"),
         btnPrev: isZh ? "← 上一頁" : "← Trang trước",
         btnNext: isZh ? "下一頁 →" : "Trang sau →",
-        pdfBackupHeading: isZh ? "原始 PDF 檔案下載與內嵌備查" : (isBi ? "TẢI FILE PDF GỐC (9.4 MB) / 原始 PDF 下載" : "TẢI VÀ XEM FILE PDF GỐC (9.4 MB)"),
-        pdfBackupSub: isZh ? "若您需要列印或保存蓋印掃描原檔，可點此下載或於電腦端檢視" : (isBi ? "Tải bản gốc phục vụ in ấn hoặc lưu trữ / 下載原件供列印存查" : "Tải bản gốc có chữ ký phê duyệt phục vụ in ấn hoặc lưu trữ")
+        securityFooter: isZh 
+          ? "萬和包裝（富壽）有限公司內部管理手冊，僅供公司員工在線閱讀，已受版權保護並關閉下載另存。"
+          : (isBi 
+            ? "Nội quy lao động lưu hành nội bộ của Wanhe Phú Thọ · 萬和內部管理規程，僅供在線閱覽，已限制下載與另存。"
+            : "Nội quy lao động là văn bản lưu hành nội bộ của Công ty TNHH Bao bì Wanhe (Phú Thọ), chỉ phục vụ tra cứu trực tuyến, nghiêm cấm tải xuống hoặc sao chép.")
       };
 
       const cards = [
@@ -960,7 +970,7 @@
           icon: "award",
           iconBg: "bg-purple-100",
           iconText: "text-purple-700",
-          title: isZh ? "第六條：勞動紀律、防騷擾與申訴權益" : (isBi ? "6. Kỷ luật, Phòng quấy rối & Khiếu nại (紀律與權益)" : "6. Kỷ luật & Bảo vệ quyền lợi"),
+          title: isZh ? "第六條：勞動紀律、防騷擾與申訴權益" : (isBi ? "6. Kỷ luật, Phòng quấy rối & Khiếu nại (紀律與權益)" : "6. Kỷ luật & Bảo vệ權益"),
           desc: isZh 
             ? "公司嚴禁任何形式之職場言語或肢體性騷擾，建立嚴密之舉報保護機制。違紀處分嚴格遵循越南勞動法規，保障員工陳述與申辯權利，不重複處分。累計曠工達法定天數將依法終止勞動契約。員工遇權益問題可隨時向人事部或總經理反映。"
             : (isBi 
@@ -990,18 +1000,18 @@
         return `<option value="${pNum}" ${currentRulePage === pNum ? "selected" : ""}>${label}</option>`;
       }).join("");
 
-      // Reader pages content
+      // Reader pages content with WebP + JPG fallback and anti-copy
       let readerPagesHtml = "";
       if (rulesViewMode === "continuous") {
         readerPagesHtml = `
-          <div class="space-y-6">
+          <div class="space-y-6 select-none" oncontextmenu="return false;">
             ${Array.from({ length: TOTAL_RULE_PAGES }).map((_, idx) => {
               const pNum = idx + 1;
               const titleObj = RULE_PAGE_TITLES[idx];
               const titleText = isZh ? titleObj.zh : (isBi ? titleObj.bi : titleObj.vi);
               return `
                 <div id="rule-page-card-${pNum}" class="bg-white rounded-2xl p-3 sm:p-5 shadow-sm border border-slate-200">
-                  <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 text-xs text-slate-500 font-medium">
+                  <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 text-xs text-slate-500 font-medium select-none">
                     <span class="inline-flex items-center gap-1.5 font-bold text-slate-800 text-xs sm:text-sm">
                       <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
                       <span>${titleText}</span>
@@ -1009,7 +1019,10 @@
                     <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold tracking-wider">${pNum} / 12</span>
                   </div>
                   <div class="text-center overflow-hidden rounded-xl bg-slate-50 border border-slate-100">
-                    <img src="rules_pages/page_${pNum}.jpg" alt="Trang ${pNum}" class="w-full max-w-3xl mx-auto h-auto rounded-lg shadow-sm" loading="${pNum <= 2 ? 'eager' : 'lazy'}" />
+                    <picture>
+                      <source srcset="rules_pages/page_${pNum}.webp" type="image/webp">
+                      <img src="rules_pages/page_${pNum}.jpg" alt="Trang ${pNum}" class="no-save-img w-full max-w-3xl mx-auto h-auto rounded-lg shadow-sm" loading="${pNum <= 2 ? 'eager' : 'lazy'}" decoding="async" draggable="false" />
+                    </picture>
                   </div>
                 </div>
               `;
@@ -1020,9 +1033,9 @@
         const curTitle = RULE_PAGE_TITLES[currentRulePage - 1];
         const titleText = isZh ? curTitle.zh : (isBi ? curTitle.bi : curTitle.vi);
         readerPagesHtml = `
-          <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+          <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 select-none" oncontextmenu="return false;">
             <!-- Top page navigation -->
-            <div class="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-200">
+            <div class="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-200 select-none">
               <button onclick="switchRulePage(${currentRulePage - 1})" ${currentRulePage <= 1 ? "disabled" : ""} 
                 class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 ${currentRulePage <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95"}">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
@@ -1043,11 +1056,14 @@
 
             <!-- Single page image -->
             <div class="text-center overflow-hidden rounded-xl bg-slate-50 border border-slate-100 p-1">
-              <img src="rules_pages/page_${currentRulePage}.jpg" alt="Trang ${currentRulePage}" class="w-full max-w-3xl mx-auto h-auto rounded-lg shadow-sm" />
+              <picture>
+                <source srcset="rules_pages/page_${currentRulePage}.webp" type="image/webp">
+                <img src="rules_pages/page_${currentRulePage}.jpg" alt="Trang ${currentRulePage}" class="no-save-img w-full max-w-3xl mx-auto h-auto rounded-lg shadow-sm" decoding="async" draggable="false" />
+              </picture>
             </div>
 
             <!-- Bottom page navigation -->
-            <div class="flex items-center justify-between gap-2 pt-4 mt-4 border-t border-slate-200">
+            <div class="flex items-center justify-between gap-2 pt-4 mt-4 border-t border-slate-200 select-none">
               <button onclick="switchRulePage(${currentRulePage - 1})" ${currentRulePage <= 1 ? "disabled" : ""} 
                 class="px-3.5 py-2 rounded-xl text-xs font-semibold ${currentRulePage <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}">
                 <span>${texts.btnPrev}</span>
@@ -1063,7 +1079,7 @@
       }
 
       container.innerHTML = `
-        <!-- Document Meta & Action Header Banner -->
+        <!-- Document Meta & Read-only Security Header Banner -->
         <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-5 sm:p-7 shadow-md">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
             <div class="space-y-2.5">
@@ -1092,18 +1108,17 @@
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0">
-              <a href="wanhe-employee-rules.pdf" download="Wanhe_Employee_Rules_V1.4.pdf" 
-                class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm shadow-sm transition">
-                <i data-lucide="download" class="w-4 h-4"></i>
-                <span>${texts.btnDownload}</span>
-              </a>
-              <a href="wanhe-employee-rules.pdf" target="_blank" rel="noopener noreferrer" 
-                class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-sm border border-white/20 transition">
-                <i data-lucide="external-link" class="w-4 h-4"></i>
-                <span>${texts.btnOpenFullscreen}</span>
-              </a>
+            <!-- Read-only Security Badge (No download) -->
+            <div class="shrink-0">
+              <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white/10 border border-white/15 backdrop-blur text-xs">
+                <div class="p-2 rounded-lg bg-amber-500/20 text-amber-300">
+                  <i data-lucide="lock" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <p class="font-bold text-white">${texts.confidentialBadge}</p>
+                  <p class="text-[11px] text-blue-200 mt-0.5">${texts.confidentialSub}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1122,7 +1137,7 @@
           </div>
         </div>
 
-        <!-- Section 2: Online Interactive Document Reader -->
+        <!-- Section 2: Online Interactive Document Reader (Ultra-Fast WebP Streaming) -->
         <div class="pt-4 space-y-4">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
             <div>
@@ -1157,50 +1172,16 @@
             </div>
           </div>
 
-          <!-- Reader Container (Image-based, 100% Reliable on all Phones & Browsers) -->
+          <!-- Reader Container (Ultra-fast WebP + JPG, No-save Protected) -->
           ${readerPagesHtml}
         </div>
 
-        <!-- Section 3: Raw PDF Backup & Desktop Embed Option -->
-        <div class="pt-4">
-          <details class="group bg-slate-100/80 rounded-2xl border border-slate-200 p-4 transition">
-            <summary class="flex items-center justify-between cursor-pointer font-bold text-slate-800 text-xs sm:text-sm select-none">
-              <span class="flex items-center gap-2">
-                <i data-lucide="file-archive" class="w-4 h-4 text-blue-600"></i>
-                <span>${texts.pdfBackupHeading}</span>
-              </span>
-              <span class="text-xs font-normal text-blue-600 group-open:rotate-180 transition transform">
-                ▼
-              </span>
-            </summary>
-            
-            <div class="pt-4 space-y-3">
-              <p class="text-xs text-slate-500">${texts.pdfBackupSub}</p>
-              <div class="flex flex-wrap gap-2 pt-1">
-                <a href="wanhe-employee-rules.pdf" download="Wanhe_Employee_Rules_V1.4.pdf" 
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm">
-                  <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                  <span>${texts.btnDownload}</span>
-                </a>
-                <a href="wanhe-employee-rules.pdf" target="_blank" 
-                  class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5">
-                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                  <span>${texts.btnOpenFullscreen}</span>
-                </a>
-              </div>
-
-              <!-- Desktop iframe embed (hidden on small screens) -->
-              <div class="hidden sm:block pt-3">
-                <div class="w-full rounded-xl overflow-hidden border border-slate-300 bg-slate-200">
-                  <iframe 
-                    src="wanhe-employee-rules.pdf#toolbar=1&navpanes=0" 
-                    class="w-full h-[600px] border-0 bg-white" 
-                    title="Wanhe Phú Thọ Employee Rules PDF">
-                  </iframe>
-                </div>
-              </div>
-            </div>
-          </details>
+        <!-- Section 3: Confidential Policy Footer Notice -->
+        <div class="pt-6 pb-2 text-center">
+          <p class="text-xs text-slate-400 flex items-center justify-center gap-1.5 max-w-xl mx-auto leading-relaxed select-none">
+            <i data-lucide="shield-check" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            <span>${texts.securityFooter}</span>
+          </p>
         </div>
       `;
 
