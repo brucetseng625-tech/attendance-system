@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-09-28T07:54:52.267736",
+  "exported_at": "2026-09-28T08:24:10.108448",
   "metadata": {
     "export_range": "2026-09-03 ~ 2026-09-25",
     "emp_name": "全體員工",
@@ -2483,9 +2483,9 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 114,
@@ -2522,10 +2522,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 116,
@@ -2543,9 +2543,9 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 117,
@@ -2563,9 +2563,9 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 118,
@@ -2583,9 +2583,9 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 112,
@@ -2602,10 +2602,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 119,
@@ -2622,10 +2622,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 120,
@@ -2642,10 +2642,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 121,
@@ -2662,10 +2662,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 122,
@@ -2682,10 +2682,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 124,
@@ -2702,10 +2702,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 113,
@@ -2722,10 +2722,10 @@
       "lunch_out": "11:30",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
+      "work_hours": 4.0,
+      "status": "normal",
+      "status_label_zh": "正常",
+      "status_label_vi": "Bình thường"
     },
     {
       "id": 125,
