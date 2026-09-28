@@ -1,11 +1,11 @@
 {
-  "exported_at": "2026-09-28T08:24:10.108448",
+  "exported_at": "2026-09-28T08:27:54.292434",
   "metadata": {
     "export_range": "2026-09-03 ~ 2026-09-25",
     "emp_name": "全體員工",
-    "total_count": 229
+    "total_count": 227
   },
-  "total": 229,
+  "total": 227,
   "records": [
     {
       "id": 248,
@@ -2728,26 +2728,6 @@
       "status_label_vi": "Bình thường"
     },
     {
-      "id": 125,
-      "employee_id": 15,
-      "employee_code": "EMP-015",
-      "att_system_id": "015",
-      "name": "Nguyễn Nam Anh",
-      "department": "萬和富壽辦公室",
-      "position": "Công nhân",
-      "date": "2026-09-11",
-      "weekday_zh": "週五",
-      "weekday_vi": "Thứ Sáu",
-      "check_in": null,
-      "lunch_out": null,
-      "lunch_in": null,
-      "check_out": null,
-      "work_hours": 0.0,
-      "status": "unpaid_leave",
-      "status_label_zh": "事假/無薪假",
-      "status_label_vi": "Nghỉ không lương"
-    },
-    {
       "id": 102,
       "employee_id": 1,
       "employee_code": "EMP-002",
@@ -3006,26 +2986,6 @@
       "status": "normal",
       "status_label_zh": "正常",
       "status_label_vi": "Bình thường"
-    },
-    {
-      "id": 168,
-      "employee_id": 15,
-      "employee_code": "EMP-015",
-      "att_system_id": "015",
-      "name": "Nguyễn Nam Anh",
-      "department": "萬和富壽辦公室",
-      "position": "Công nhân",
-      "date": "2026-09-10",
-      "weekday_zh": "週四",
-      "weekday_vi": "Thứ Năm",
-      "check_in": null,
-      "lunch_out": null,
-      "lunch_in": null,
-      "check_out": null,
-      "work_hours": 0.0,
-      "status": "absent",
-      "status_label_zh": "曠工/缺勤",
-      "status_label_vi": "Vắng mặt/Nghỉ không phép"
     },
     {
       "id": 89,
