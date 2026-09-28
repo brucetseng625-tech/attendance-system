@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-09-28T08:27:54.292434",
+  "exported_at": "2026-09-28T08:30:24.375052",
   "metadata": {
     "export_range": "2026-09-03 ~ 2026-09-25",
     "emp_name": "全體員工",
@@ -2502,7 +2502,7 @@
       "lunch_out": "11:30",
       "lunch_in": "13:00",
       "check_out": "17:00",
-      "work_hours": 7.5,
+      "work_hours": 8.0,
       "status": "normal",
       "status_label_zh": "正常",
       "status_label_vi": "Bình thường"
