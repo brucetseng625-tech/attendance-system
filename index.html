@@ -362,7 +362,7 @@
         if (!match || +match[1] > 23 || +match[2] > 59 || +(match[3] || 0) > 59) throw new Error("Invalid punch time");
         return `${match[1].padStart(2, "0")}:${match[2]}:${match[3] || "00"}`;
       }
-      function actualHours(record) {
+      function workedDuration(record) {
         const punches = [record.check_in, record.lunch_out, record.lunch_in, record.check_out];
         const seconds = value => value == null ? null : value.split(":").reduce((n, v) => n * 60 + Number(v), 0);
         const values = punches.map(seconds);
@@ -386,7 +386,21 @@
           net = workedSeconds(values[2], values[3]);
           source = "partial_punches";
         }
+        return { net, source };
+      }
+      function actualHours(record) {
+        const { net, source } = workedDuration(record);
         return { actual_work_hours: net === null ? null : Math.round(net * 100 / 3600) / 100, actual_work_hours_source: source };
+      }
+      function displayHours(record) {
+        const { net } = workedDuration(record);
+        // Display complete half-hours only. Use original net seconds, not the
+        // two-decimal actual hours: 17:29:59 must not cross the 17:30 boundary.
+        // This is not overtime approval and never changes HR/payroll values.
+        return net === null ? null : Math.floor(net / 1800) / 2;
+      }
+      function formatHours(value) {
+        return value === null ? "—" : String(value);
       }
       function normalizeDataset(payload) {
         const rows = Array.isArray(payload) ? payload : payload && typeof payload === "object" && Array.isArray(payload.records) ? payload.records : null;
@@ -413,6 +427,7 @@
             normalized.weekday_vi ||= ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][weekday];
             normalized.weekday_zh ||= ["日", "一", "二", "三", "四", "五", "六"][weekday];
             Object.assign(normalized, actualHours(normalized));
+            normalized.display_work_hours = displayHours(normalized);
             normalized.hours_difference = normalized.actual_work_hours !== null && hours !== null && normalized.actual_work_hours !== hours ? Math.round((normalized.actual_work_hours - hours) * 100) / 100 : null;
             return normalized;
           } catch (error) { throw new Error(`Row ${i + 1} / 第 ${i + 1} 筆: ${error.message}`); }
@@ -429,7 +444,7 @@
         if (identities.size > 1) return { records: [], ambiguous: true };
         return { records: matches.filter(r => !month || r.date.startsWith(month)).sort((a, b) => a.date.localeCompare(b.date)), ambiguous: false };
       }
-      return { normalizeDataset, actualHours, months, search, escapeHtml, time, date };
+      return { normalizeDataset, actualHours, displayHours, formatHours, months, search, escapeHtml, time, date };
     })();
   </script>
   <script>
@@ -450,7 +465,7 @@
         tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
         tabRegulations: "Nội quy lao động (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
-        queryDesc: "Nhập mã nhân viên để xem chấm công. Giờ thực tế không tính giờ nghỉ cố định 11:30–13:00; không phải tiền OT đã duyệt.",
+        queryDesc: "Giờ hiển thị chỉ tính đủ mỗi 30 phút, không tính nghỉ 11:30–13:00; không thay đổi giờ gốc hay lương. Không phải OT đã duyệt.",
         btnUpload: "Nạp file Excel / JSON",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ: EMP-001, VH001 hoặc họ tên...",
@@ -459,7 +474,7 @@
         promptTitle: "Vui lòng nhập Mã nhân viên để tra cứu",
         promptDesc: "Hệ thống bảo mật thông tin cá nhân. Bạn chỉ xem được dữ liệu của chính mình sau khi nhập đúng Mã NV (工號).",
         lblDays: "Số ngày công",
-        lblHoursPrefix: "Giờ theo chấm công:",
+        lblHoursPrefix: "Tổng giờ hiển thị:",
         lblNormal: "Bình thường",
         lblNormalSub: "Đúng giờ chuẩn",
         lblLate: "Đi muộn / Về sớm",
@@ -475,7 +490,10 @@
         thSlot2: "Ra trưa (2)",
         thSlot3: "Vào chiều (3)",
         thSlot4: "Ra chiều (4)",
-        thHours: "Giờ thực tế",
+        thHours: "Giờ hiển thị (0.5h)",
+        auditSummary: "Đối chiếu",
+        auditActual: "Giờ tính gốc",
+        auditStored: "Giờ đã lưu",
         thStatus: "Trạng thái",
         notFoundPrompt: "Không tìm thấy dữ liệu chấm công cho nhân viên này trong khoảng thời gian đã chọn.",
         regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ CÔNG TY",
@@ -486,7 +504,7 @@
         tabAttendance: "出勤打卡查詢",
         tabRegulations: "員工管理規章",
         queryTitle: "員工考勤打卡查詢",
-        queryDesc: "輸入工號查詢每日打卡。實際工時一律排除固定午休 11:30–13:00，不代表已核准加班費；與原存檔不同時會保留對照。",
+        queryDesc: "顯示工時只計完整半小時，一律排除固定午休 11:30–13:00；不改原始工時或薪資，也不代表已核准加班。可展開核對原值。",
         btnUpload: "載入 Excel / JSON 檔案",
         labelEmpInput: "員工工號 (或姓名):",
         placeholderEmpInput: "例如：EMP-001, VH001 或姓名...",
@@ -495,7 +513,7 @@
         promptTitle: "請在上方輸入員工工號開始查詢",
         promptDesc: "系統保護員工個人隱私。輸入個人工號後，僅會顯示您自己的打卡明細與當月出勤統計。",
         lblDays: "出勤天數",
-        lblHoursPrefix: "打卡工時合計:",
+        lblHoursPrefix: "顯示工時合計:",
         lblNormal: "正常出勤",
         lblNormalSub: "準時到勤",
         lblLate: "遲到 / 早退",
@@ -511,7 +529,10 @@
         thSlot2: "下班 1 (午休出)",
         thSlot3: "上班 2 (午後進)",
         thSlot4: "下班 2 (下午退)",
-        thHours: "打卡實際工時",
+        thHours: "顯示工時（0.5h）",
+        auditSummary: "核對原值",
+        auditActual: "打卡計算原值",
+        auditStored: "原存檔工時",
         thStatus: "出勤狀態",
         notFoundPrompt: "在指定月份內未找到該工號的出勤打卡紀錄，請確認工號是否正確。",
         regMainTitle: "萬和包裝（富壽）有限公司 · 員工管理規章與工作守則",
@@ -522,7 +543,7 @@
         tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
         tabRegulations: "Nội quy & Quy chế (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
-        queryDesc: "Giờ thực tế không tính nghỉ 11:30–13:00 / 實際工時排除固定午休 11:30–13:00，非核准加班費。",
+        queryDesc: "Chỉ tính đủ mỗi 30 phút / 只顯示完整半小時；排除午休 11:30–13:00，不改原始工時或薪資，非核准加班。",
         btnUpload: "Nạp file Excel / JSON",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ / 例如: EMP-001, VH001...",
@@ -531,7 +552,7 @@
         promptTitle: "Vui lòng nhập Mã nhân viên (請輸入工號查詢)",
         promptDesc: "Hệ thống bảo mật thông tin cá nhân. Chỉ hiển thị dữ liệu của chính bạn sau khi nhập Mã NV (工號)。",
         lblDays: "Số ngày công (出勤天數)",
-        lblHoursPrefix: "Giờ chấm công / 打卡工時:",
+        lblHoursPrefix: "Giờ hiển thị / 顯示工時合計:",
         lblNormal: "Bình thường (正常)",
         lblNormalSub: "Đúng giờ (準時)",
         lblLate: "Đi muộn/Về sớm (遲到早退)",
@@ -547,7 +568,10 @@
         thSlot2: "Ra 1 (午休出)",
         thSlot3: "Vào 2 (午後進)",
         thSlot4: "Ra 2 (下班 2)",
-        thHours: "Giờ thực tế (實際工時)",
+        thHours: "Giờ hiển thị (顯示工時 0.5h)",
+        auditSummary: "Đối chiếu / 核對",
+        auditActual: "Giờ tính gốc / 打卡原值",
+        auditStored: "Giờ đã lưu / 原存檔",
         thStatus: "Trạng thái (狀態)",
         notFoundPrompt: "Không tìm thấy dữ liệu phù hợp với Mã NV này. (未查到該工號紀錄)",
         regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ / 員工管理規章",
@@ -975,7 +999,7 @@
 
       userRecords.forEach(r => {
         if (r.actual_work_hours > 0) totalDays++;
-        totalHours += r.actual_work_hours ?? 0;
+        totalHours += r.display_work_hours ?? 0;
         const s = (r.status || "").toLowerCase();
         if (s === "normal") normalCount++;
         else if (s === "late" || s === "early_leave") lateCount++;
@@ -984,10 +1008,10 @@
       });
 
       document.getElementById("stat-total-days").innerText = totalDays;
-      document.getElementById("stat-total-hours").innerText = totalHours.toFixed(2);
+      document.getElementById("stat-total-hours").innerText = PortalData.formatHours(totalHours);
       const unknownCount = userRecords.filter(r => r.actual_work_hours === null).length;
       const estimatedCount = userRecords.filter(r => r.actual_work_hours_source === "outer_punches_estimated").length;
-      document.getElementById("stat-hours-note").innerText = currentLang === "zh" ? `排除固定午休 11:30–13:00。含 ${estimatedCount} 筆估算；${unknownCount} 筆缺漏未計入。` : `Không tính nghỉ 11:30–13:00. Gồm ${estimatedCount} ước tính; ${unknownCount} thiếu giờ chưa cộng.`;
+      document.getElementById("stat-hours-note").innerText = currentLang === "zh" ? `每日只計完整半小時後加總，排除午休 11:30–13:00；非薪資或核准加班。含 ${estimatedCount} 筆估算；${unknownCount} 筆缺漏未計入。` : currentLang === "bilingual" ? `完整半小時逐日加總 / Cộng đủ mỗi 30 phút từng ngày；午休 / Nghỉ 11:30–13:00 排除；非薪資或核准加班 / Không phải lương hay OT duyệt。估算 / Ước tính: ${estimatedCount}；缺漏 / Thiếu giờ: ${unknownCount}。` : `Cộng giờ đủ mỗi 30 phút từng ngày; không tính nghỉ 11:30–13:00, không phải lương hay OT duyệt. Gồm ${estimatedCount} ước tính; ${unknownCount} thiếu giờ chưa cộng.`;
       document.getElementById("stat-normal-days").innerText = normalCount;
       document.getElementById("stat-late-count").innerText = lateCount;
       document.getElementById("stat-leave-days").innerText = leaveCount;
@@ -1016,13 +1040,17 @@
         const badge = getStatusBadge(r.status);
         const fmt = (v) => (v ? PortalData.escapeHtml(v.slice(0, 5)) : `<span class="text-slate-300 font-normal">—</span>`);
         const sourceLabels = {
-          four_punches: currentLang === "zh" ? "實際（四打卡）" : "Thực tế (4 lần)",
+          four_punches: currentLang === "zh" ? "四打卡" : "4 lần chấm công",
           outer_punches_estimated: currentLang === "zh" ? "估算（固定午休 11:30–13:00）" : "Ước tính (nghỉ 11:30–13:00)",
           partial_punches: currentLang === "zh" ? "部分打卡" : "Chấm công một phần",
           unavailable: currentLang === "zh" ? "打卡缺漏待核對" : "Thiếu chấm công; cần kiểm tra",
         };
-        const actual = r.actual_work_hours === null ? "—" : `${r.actual_work_hours.toFixed(2)}h`;
-        const stored = r.work_hours !== null && (r.actual_work_hours === null || r.hours_difference !== null) ? `<div class="text-[11px] font-normal text-amber-700">${currentLang === "zh" ? "原存檔" : "Đã lưu"}: ${r.work_hours.toFixed(2)}h</div>` : "";
+        const showHours = value => value === null ? "—" : `${PortalData.formatHours(value)}h`;
+        const displayed = showHours(r.display_work_hours);
+        const storedDisplay = r.work_hours === null ? null : Math.floor(r.work_hours * 2) / 2;
+        const stored = r.work_hours !== null && (r.display_work_hours === null || r.display_work_hours !== storedDisplay) ? `<div class="text-[11px] font-normal text-amber-700">${currentLang === "zh" ? "原存檔" : "Đã lưu"}: ${showHours(r.work_hours)}</div>` : "";
+        const t = I18N[currentLang] || I18N.vi;
+        const audit = `<details class="text-[11px] font-normal text-slate-500" data-hours-audit><summary class="cursor-pointer">${t.auditSummary}</summary><div>${t.auditActual}: ${showHours(r.actual_work_hours)}</div><div>${t.auditStored}: ${showHours(r.work_hours)}</div></details>`;
 
         return `
           <tr class="hover:bg-slate-50 transition border-b border-slate-100">
@@ -1032,7 +1060,7 @@
             <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_out)}</td>
             <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_in)}</td>
             <td class="py-3 px-3 text-center font-mono font-bold text-forest-700 bg-forest-50/50">${fmt(r.check_out)}</td>
-            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800">${actual}<div class="text-[11px] font-normal text-slate-500">${sourceLabels[r.actual_work_hours_source]}</div>${stored}</td>
+            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800"><span data-display-hours>${displayed}</span><div class="text-[11px] font-normal text-slate-500">${sourceLabels[r.actual_work_hours_source]}</div>${stored}${audit}</td>
             <td class="py-3 px-4 text-center">${badge}</td>
           </tr>
         `;
