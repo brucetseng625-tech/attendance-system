@@ -7,6 +7,17 @@
   <title>万和包装（富寿）- 员工考勤打卡查询与管理规章 (Wanhe Attendance Portal)</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Same primary green as the ERP; distinct tints keep morning/afternoon readable.
+    if (window.tailwind) tailwind.config = { theme: { extend: { colors: {
+      brand: { 50: '#f3f6f2', 100: '#e7f1e5', 200: '#d6e0d5', 300: '#a8c9a3', 400: '#6b9f62', 500: '#428747', 600: '#397b3c', 700: '#2e6633', 800: '#28552d', 900: '#24492a', 950: '#19351f' },
+      leaf: { 50: '#f4f8f1', 100: '#eaf4e2', 200: '#d5ebc5', 300: '#bbdfa7', 400: '#a4d48b', 500: '#397b3c', 600: '#397b3c', 700: '#2e6633', 800: '#28552d' },
+      forest: { 50: '#edf3e9', 100: '#e2ece0', 200: '#cbdcc7', 700: '#315c36', 800: '#284c2d', 900: '#234328', 950: '#19351f' },
+      slate: { 50: '#f3f6f2', 100: '#edf3e9', 200: '#e5ebe3', 300: '#d6e0d5', 400: '#748177', 500: '#627066', 600: '#4a5a4d', 700: '#35483a', 800: '#243329', 900: '#1b2b20', 950: '#15241a' }
+    } } } };
+  </script>
+  <link rel="icon" href="./brand/wanhe-logo.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#397b3c" />
   <!-- SheetJS CDN for client-side Excel parsing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Lucide Icons -->
@@ -14,7 +25,23 @@
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
     body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .tab-btn.active { border-bottom: 3px solid #38bdf8; color: #ffffff; font-weight: 700; }
+    .tab-btn.active { border-bottom: 3px solid #a4d48b; color: #ffffff; font-weight: 700; }
+    .company-logo {
+      display: block;
+      width: 76px;
+      height: 96px;
+      object-fit: contain;
+      flex-shrink: 0;
+      background: #fff;
+      border-radius: 12px;
+      padding: 7px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 639px) {
+      .company-logo { width: 68px; height: 86px; }
+      .company-heading { font-size: 1.05rem; }
+      .portal-tabs { gap: 1rem; }
+    }
     .no-save-img {
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
@@ -27,39 +54,37 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
   <!-- Header Banner -->
-  <header class="bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-950 text-white shadow-md">
+  <header class="bg-gradient-to-r from-brand-950 via-forest-950 to-slate-950 text-white shadow-md">
     <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-      <div class="flex items-center gap-3">
-        <div class="bg-white/10 p-2.5 rounded-xl border border-white/20 backdrop-blur">
-          <i data-lucide="building-2" class="w-7 h-7 text-sky-400"></i>
-        </div>
-        <div>
-          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">CÔNG TY TNHH BAO BÌ WANHE</h1>
-          <p class="text-xs sm:text-sm text-blue-200" id="header-subtitle">萬和包裝（富壽）有限公司 · 員工服務專區 (Cổng thông tin nhân viên)</p>
+      <div class="flex items-center gap-3 min-w-0">
+        <img class="company-logo" src="./brand/wanhe-logo.svg" alt="WANHE PACKAGING — 萬和包裝公司 LOGO" width="76" height="96" />
+        <div class="min-w-0">
+          <h1 class="company-heading text-xl sm:text-2xl font-bold tracking-tight">CÔNG TY TNHH BAO BÌ WANHE</h1>
+          <p class="text-xs sm:text-sm text-brand-200" id="header-subtitle">萬和包裝（富壽）有限公司 · 員工服務專區 (Cổng thông tin nhân viên)</p>
         </div>
       </div>
 
       <!-- Language Switcher -->
       <div class="flex items-center gap-1.5 bg-white/10 p-1 rounded-xl border border-white/15 text-xs">
-        <button onclick="setLanguage('vi')" id="lang-btn-vi" class="px-2.5 py-1 rounded-lg font-medium transition bg-sky-500 text-white font-bold shadow-sm">
+        <button onclick="setLanguage('vi')" id="lang-btn-vi" class="px-2.5 py-1 rounded-lg font-medium transition bg-leaf-500 text-white font-bold shadow-sm">
           🇻🇳 Tiếng Việt
         </button>
-        <button onclick="setLanguage('zh')" id="lang-btn-zh" class="px-2.5 py-1 rounded-lg font-medium transition text-blue-200 hover:text-white">
+        <button onclick="setLanguage('zh')" id="lang-btn-zh" class="px-2.5 py-1 rounded-lg font-medium transition text-brand-200 hover:text-white">
           🇹🇼 繁體中文
         </button>
-        <button onclick="setLanguage('bilingual')" id="lang-btn-bi" class="px-2.5 py-1 rounded-lg font-medium transition text-blue-200 hover:text-white">
+        <button onclick="setLanguage('bilingual')" id="lang-btn-bi" class="px-2.5 py-1 rounded-lg font-medium transition text-brand-200 hover:text-white">
           🌐 Song ngữ (雙語)
         </button>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="max-w-6xl mx-auto px-4 flex gap-6 border-t border-white/10">
-      <button onclick="switchTab('attendance')" id="tab-attendance-btn" class="tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-sky-400">
-        <i data-lucide="calendar-check" class="w-4 h-4 text-sky-400"></i>
+    <div class="portal-tabs max-w-6xl mx-auto px-4 flex gap-6 border-t border-white/10">
+      <button onclick="switchTab('attendance')" id="tab-attendance-btn" class="tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-leaf-400">
+        <i data-lucide="calendar-check" class="w-4 h-4 text-leaf-400"></i>
         <span id="tab-title-attendance">Tra cứu chấm công (出勤打卡查詢)</span>
       </button>
-      <button onclick="switchTab('regulations')" id="tab-regulations-btn" class="tab-btn py-3 text-sm font-medium flex items-center gap-2 text-blue-200 hover:text-white">
+      <button onclick="switchTab('regulations')" id="tab-regulations-btn" class="tab-btn py-3 text-sm font-medium flex items-center gap-2 text-brand-200 hover:text-white">
         <i data-lucide="book-open" class="w-4 h-4"></i>
         <span id="tab-title-regulations">Nội quy lao động (員工管理規章)</span>
       </button>
@@ -77,7 +102,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
             <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2" id="query-card-title">
-              <i data-lucide="search" class="w-5 h-5 text-blue-600"></i>
+              <i data-lucide="search" class="w-5 h-5 text-brand-600"></i>
               <span>Tra cứu thông tin chấm công (考勤資訊查詢)</span>
             </h2>
             <p class="text-xs text-slate-500 mt-1" id="query-card-desc">
@@ -92,7 +117,7 @@
           <!-- Data File Loader (for test / offline use) -->
           <div class="flex items-center gap-2">
             <label class="cursor-pointer bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 flex items-center gap-1.5 transition" title="Nạp file Excel hoặc JSON xuất từ ERP">
-              <i data-lucide="upload" class="w-3.5 h-3.5 text-blue-600"></i>
+              <i data-lucide="upload" class="w-3.5 h-3.5 text-brand-600"></i>
               <span id="btn-upload-label">Nạp file Excel / JSON</span>
               <input type="file" id="file-input" accept=".xlsx,.xls,.json" class="hidden" onchange="handleFileUpload(event)" />
             </label>
@@ -115,7 +140,7 @@
                 type="text"
                 id="input-emp-code"
                 placeholder="Ví dụ: EMP-001, VH001 hoặc tên..."
-                class="w-full pl-10 pr-3 py-2.5 text-sm font-semibold border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white transition"
+                class="w-full pl-10 pr-3 py-2.5 text-sm font-semibold border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 focus:bg-white transition"
                 required
               />
             </div>
@@ -126,18 +151,17 @@
             <label class="block text-xs font-bold text-slate-700 mb-1.5" id="label-month-input">
               Tháng làm việc (月份篩選):
             </label>
-            <input
-              type="month"
+            <select
               id="input-month"
-              class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 focus:bg-white transition"
-            />
+              class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 focus:bg-white transition"
+            ><option value="">Tất cả tháng / 全部月份</option></select>
           </div>
 
           <!-- Action Buttons -->
           <div class="sm:col-span-3 flex gap-2">
             <button
               type="submit"
-              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 text-sm"
+              class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 text-sm"
               id="btn-search"
             >
               <i data-lucide="search" class="w-4 h-4"></i>
@@ -157,7 +181,7 @@
 
       <!-- State 1: Before Search Prompt (Initial View) -->
       <div id="prompt-before-search" class="bg-white rounded-2xl p-10 sm:p-14 text-center border border-slate-200 shadow-sm space-y-3">
-        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+        <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
           <i data-lucide="fingerprint" class="w-9 h-9"></i>
         </div>
         <h3 class="text-base sm:text-lg font-bold text-slate-800" id="prompt-title">
@@ -172,20 +196,20 @@
       <div id="search-result-container" class="hidden space-y-6">
 
         <!-- Employee Info Banner -->
-        <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="bg-gradient-to-r from-brand-900 to-forest-900 text-white rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center font-bold text-lg text-sky-300 border border-white/20">
+            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center font-bold text-lg text-leaf-300 border border-white/20">
               <i data-lucide="id-card" class="w-6 h-6"></i>
             </div>
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-lg font-bold tracking-wide" id="res-emp-name">—</span>
-                <span class="bg-sky-400/20 text-sky-200 font-mono text-xs px-2.5 py-0.5 rounded-full border border-sky-400/30" id="res-emp-code">—</span>
+                <span class="bg-leaf-400/20 text-leaf-200 font-mono text-xs px-2.5 py-0.5 rounded-full border border-leaf-400/30" id="res-emp-code">—</span>
               </div>
-              <p class="text-xs text-blue-200 mt-0.5" id="res-emp-dept-pos">— · —</p>
+              <p class="text-xs text-brand-200 mt-0.5" id="res-emp-dept-pos">— · —</p>
             </div>
           </div>
-          <div class="text-xs text-blue-200 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+          <div class="text-xs text-brand-200 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
             <span id="res-month-badge">Kỳ công: Tháng này</span>
           </div>
         </div>
@@ -196,12 +220,13 @@
           <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
             <div class="text-xs text-slate-500 font-medium flex items-center justify-between">
               <span id="stat-lbl-days">Số ngày công (出勤)</span>
-              <i data-lucide="calendar" class="w-4 h-4 text-blue-500"></i>
+              <i data-lucide="calendar" class="w-4 h-4 text-brand-500"></i>
             </div>
             <div class="mt-2 text-2xl font-bold text-slate-800" id="stat-total-days">0</div>
             <div class="text-[11px] text-slate-400 mt-0.5">
-              <span id="stat-lbl-hours-prefix">Tổng giờ:</span> <strong id="stat-total-hours" class="text-blue-600 font-semibold">0</strong>h
+              <span id="stat-lbl-hours-prefix">Tổng giờ:</span> <strong id="stat-total-hours" class="text-brand-600 font-semibold">0</strong>h
             </div>
+            <div id="stat-hours-note" class="text-[11px] text-slate-500 mt-1"></div>
           </div>
 
           <!-- Normal -->
@@ -226,11 +251,11 @@
 
           <!-- Leaves (Annual, sick, unpaid, etc.) -->
           <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
-            <div class="text-xs text-sky-600 font-medium flex items-center justify-between">
+            <div class="text-xs text-leaf-600 font-medium flex items-center justify-between">
               <span id="stat-lbl-leave">Nghỉ phép (請假)</span>
-              <i data-lucide="coffee" class="w-4 h-4 text-sky-500"></i>
+              <i data-lucide="coffee" class="w-4 h-4 text-leaf-500"></i>
             </div>
-            <div class="mt-2 text-2xl font-bold text-sky-600" id="stat-leave-days">0</div>
+            <div class="mt-2 text-2xl font-bold text-leaf-600" id="stat-leave-days">0</div>
             <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-leave-sub">Phép năm / có phép</div>
           </div>
 
@@ -249,7 +274,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2" id="table-head-title">
-              <i data-lucide="clock-4" class="w-4 h-4 text-blue-600"></i>
+              <i data-lucide="clock-4" class="w-4 h-4 text-brand-600"></i>
               <span>Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)</span>
             </h3>
             <span class="text-xs text-slate-500" id="table-showing-count">0 ngày</span>
@@ -261,10 +286,10 @@
                 <tr>
                   <th class="py-3 px-3.5" id="th-date">Ngày (日期)</th>
                   <th class="py-3 px-3 text-center" id="th-weekday">Thứ (星期)</th>
-                  <th class="py-3 px-3 text-center bg-sky-50 text-sky-800" id="th-slot1">Vào sáng (上班 1)</th>
-                  <th class="py-3 px-3 text-center bg-sky-50/70 text-sky-800" id="th-slot2">Ra trưa (下班 1)</th>
-                  <th class="py-3 px-3 text-center bg-indigo-50 text-indigo-800" id="th-slot3">Vào chiều (上班 2)</th>
-                  <th class="py-3 px-3 text-center bg-indigo-50/70 text-indigo-800" id="th-slot4">Ra chiều (下班 2)</th>
+                  <th class="py-3 px-3 text-center bg-leaf-50 text-leaf-800" id="th-slot1">Vào sáng (上班 1)</th>
+                  <th class="py-3 px-3 text-center bg-leaf-50/70 text-leaf-800" id="th-slot2">Ra trưa (下班 1)</th>
+                  <th class="py-3 px-3 text-center bg-forest-50 text-forest-800" id="th-slot3">Vào chiều (上班 2)</th>
+                  <th class="py-3 px-3 text-center bg-forest-50/70 text-forest-800" id="th-slot4">Ra chiều (下班 2)</th>
                   <th class="py-3 px-3 text-right" id="th-hours">Giờ làm (工時)</th>
                   <th class="py-3 px-4 text-center" id="th-status">Trạng thái (出勤狀態)</th>
                 </tr>
@@ -284,7 +309,7 @@
     <section id="tab-regulations" class="hidden space-y-6">
       <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
         <div class="flex items-center gap-3.5 pb-5 border-b border-slate-200">
-          <div class="p-3 bg-blue-50 text-blue-700 rounded-xl">
+          <div class="p-3 bg-brand-50 text-brand-700 rounded-xl">
             <i data-lucide="scale" class="w-6 h-6"></i>
           </div>
           <div>
@@ -310,10 +335,113 @@
   </footer>
 
   <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+  <script id="attendance-data-core">
+    // Pure data contract, shared by every loader and exercised by Node tests.
+    const PortalData = (() => {
+      const text = (value, field) => {
+        if (value == null) return "";
+        if (typeof value !== "string" && typeof value !== "number") throw new Error(`Invalid ${field}`);
+        return String(value).trim();
+      };
+      const key = value => String(value || "").trim().normalize("NFKC").toLowerCase();
+      const deviceKey = value => /^\d+$/.test(key(value)) ? key(value).replace(/^0+(?=\d)/, "") : key(value);
+      const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+      function date(value) {
+        const s = text(value, "date");
+        const match = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T|\s)/);
+        if (!match) throw new Error("Invalid attendance date (YYYY-MM-DD required)");
+        const canonical = match.slice(1).join("-");
+        const parsed = new Date(`${canonical}T00:00:00Z`);
+        if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== canonical) throw new Error("Invalid attendance date");
+        return canonical;
+      }
+      function time(value) {
+        const s = text(value, "punch time");
+        if (!s || s === "—" || s === "-") return null;
+        const match = s.match(/(?:^|T|\s)(\d{1,2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?$/);
+        if (!match || +match[1] > 23 || +match[2] > 59 || +(match[3] || 0) > 59) throw new Error("Invalid punch time");
+        return `${match[1].padStart(2, "0")}:${match[2]}:${match[3] || "00"}`;
+      }
+      function actualHours(record) {
+        const punches = [record.check_in, record.lunch_out, record.lunch_in, record.check_out];
+        const seconds = value => value == null ? null : value.split(":").reduce((n, v) => n * 60 + Number(v), 0);
+        const values = punches.map(seconds);
+        const present = values.filter(v => v !== null);
+        if (present.some((v, i) => i > 0 && v < present[i - 1])) throw new Error("Punch times are not chronological");
+        let net = null;
+        let source = "unavailable";
+        // Company policy: the fixed 11:30–13:00 break is never worked time,
+        // regardless of early/late lunch punches. Subtract only its overlap.
+        const workedSeconds = (start, end) => end - start - Math.max(0, Math.min(end, 13 * 3600) - Math.max(start, 11 * 3600 + 30 * 60));
+        if (present.length === 4) {
+          net = workedSeconds(values[0], values[1]) + workedSeconds(values[2], values[3]);
+          source = "four_punches";
+        } else if (present.length === 2 && values[0] !== null && values[3] !== null) {
+          net = workedSeconds(values[0], values[3]);
+          source = "outer_punches_estimated";
+        } else if (present.length === 2 && values[0] !== null && values[1] !== null) {
+          net = workedSeconds(values[0], values[1]);
+          source = "partial_punches";
+        } else if (present.length === 2 && values[2] !== null && values[3] !== null) {
+          net = workedSeconds(values[2], values[3]);
+          source = "partial_punches";
+        }
+        return { actual_work_hours: net === null ? null : Math.round(net * 100 / 3600) / 100, actual_work_hours_source: source };
+      }
+      function normalizeDataset(payload) {
+        const rows = Array.isArray(payload) ? payload : payload && typeof payload === "object" && Array.isArray(payload.records) ? payload.records : null;
+        if (!rows || rows.length === 0) throw new Error("No attendance records / 檔案沒有有效考勤紀錄");
+        const records = rows.map((row, i) => {
+          try {
+            if (!row || Array.isArray(row) || typeof row !== "object") throw new Error("Invalid record");
+            const employee_code = text(row.employee_code ?? row.emp_code, "employee_code");
+            const name = text(row.name ?? row.employee_name, "name");
+            const att_system_id = text(row.att_system_id, "att_system_id");
+            if (!employee_code && !name && !att_system_id) throw new Error("Missing employee identity");
+            const rawHours = row.work_hours;
+            const hours = rawHours == null || rawHours === "" ? null : Number(rawHours);
+            if (hours !== null && (!Number.isFinite(hours) || hours < 0 || hours > 24 || !["number", "string"].includes(typeof rawHours))) throw new Error("Invalid work_hours (0–24 required)");
+            const normalized = {
+              employee_code, name, att_system_id,
+              employee_id: text(row.employee_id, "employee_id"),
+              department: text(row.department, "department"), position: text(row.position, "position"),
+              date: date(row.date), weekday_vi: text(row.weekday_vi, "weekday_vi"), weekday_zh: text(row.weekday_zh, "weekday_zh"),
+              check_in: time(row.check_in), lunch_out: time(row.lunch_out), lunch_in: time(row.lunch_in), check_out: time(row.check_out),
+              work_hours: hours, status: text(row.status, "status").toLowerCase() || "normal",
+            };
+            const weekday = new Date(`${normalized.date}T00:00:00Z`).getUTCDay();
+            normalized.weekday_vi ||= ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][weekday];
+            normalized.weekday_zh ||= ["日", "一", "二", "三", "四", "五", "六"][weekday];
+            Object.assign(normalized, actualHours(normalized));
+            normalized.hours_difference = normalized.actual_work_hours !== null && hours !== null && normalized.actual_work_hours !== hours ? Math.round((normalized.actual_work_hours - hours) * 100) / 100 : null;
+            return normalized;
+          } catch (error) { throw new Error(`Row ${i + 1} / 第 ${i + 1} 筆: ${error.message}`); }
+        });
+        return { records, exported_at: !Array.isArray(payload) && payload.exported_at ? text(payload.exported_at, "exported_at") : null };
+      }
+      const months = records => [...new Set(records.map(r => r.date.slice(0, 7)))].sort().reverse();
+      function search(records, query, month = "") {
+        const q = key(query);
+        if (!q) return { records: [], ambiguous: false };
+        const direct = records.filter(r => key(r.employee_code) === q || (r.att_system_id && deviceKey(r.att_system_id) === deviceKey(q)));
+        const matches = direct.length ? direct : records.filter(r => key(r.name).includes(q));
+        const identities = new Set(matches.map(r => key(r.employee_code) || deviceKey(r.att_system_id) || r.employee_id || key(r.name)));
+        if (identities.size > 1) return { records: [], ambiguous: true };
+        return { records: matches.filter(r => !month || r.date.startsWith(month)).sort((a, b) => a.date.localeCompare(b.date)), ambiguous: false };
+      }
+      return { normalizeDataset, actualHours, months, search, escapeHtml, time, date };
+    })();
+  </script>
   <script>
     let allRecords = [];
     let currentEmployeeCode = "";
-    let currentLang = localStorage.getItem("portal_lang") || "vi";
+    let currentLang = "vi";
+    try { const saved = localStorage.getItem("portal_lang"); if (["vi", "zh", "bilingual"].includes(saved)) currentLang = saved; } catch (e) {}
+    let dataGeneration = 0;
+    let dataSource = "";
+    let dataLoadFailed = false;
+
+    function createIcons() { if (window.lucide) lucide.createIcons(); }
 
     // Bilingual text dictionary
     const I18N = {
@@ -322,7 +450,7 @@
         tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
         tabRegulations: "Nội quy lao động (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
-        queryDesc: "Nhập mã nhân viên để xem giờ vào ra 4 ca và số ngày công của bạn.",
+        queryDesc: "Nhập mã nhân viên để xem chấm công. Giờ thực tế không tính giờ nghỉ cố định 11:30–13:00; không phải tiền OT đã duyệt.",
         btnUpload: "Nạp file Excel / JSON",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ: EMP-001, VH001 hoặc họ tên...",
@@ -331,7 +459,7 @@
         promptTitle: "Vui lòng nhập Mã nhân viên để tra cứu",
         promptDesc: "Hệ thống bảo mật thông tin cá nhân. Bạn chỉ xem được dữ liệu của chính mình sau khi nhập đúng Mã NV (工號).",
         lblDays: "Số ngày công",
-        lblHoursPrefix: "Tổng giờ:",
+        lblHoursPrefix: "Giờ theo chấm công:",
         lblNormal: "Bình thường",
         lblNormalSub: "Đúng giờ chuẩn",
         lblLate: "Đi muộn / Về sớm",
@@ -347,7 +475,7 @@
         thSlot2: "Ra trưa (2)",
         thSlot3: "Vào chiều (3)",
         thSlot4: "Ra chiều (4)",
-        thHours: "Giờ làm",
+        thHours: "Giờ thực tế",
         thStatus: "Trạng thái",
         notFoundPrompt: "Không tìm thấy dữ liệu chấm công cho nhân viên này trong khoảng thời gian đã chọn.",
         regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ CÔNG TY",
@@ -358,7 +486,7 @@
         tabAttendance: "出勤打卡查詢",
         tabRegulations: "員工管理規章",
         queryTitle: "員工考勤打卡查詢",
-        queryDesc: "輸入員工工號並點擊【查詢】按鈕，查看您的每日四時段打卡時間與工作天數。",
+        queryDesc: "輸入工號查詢每日打卡。實際工時一律排除固定午休 11:30–13:00，不代表已核准加班費；與原存檔不同時會保留對照。",
         btnUpload: "載入 Excel / JSON 檔案",
         labelEmpInput: "員工工號 (或姓名):",
         placeholderEmpInput: "例如：EMP-001, VH001 或姓名...",
@@ -367,7 +495,7 @@
         promptTitle: "請在上方輸入員工工號開始查詢",
         promptDesc: "系統保護員工個人隱私。輸入個人工號後，僅會顯示您自己的打卡明細與當月出勤統計。",
         lblDays: "出勤天數",
-        lblHoursPrefix: "累計工時:",
+        lblHoursPrefix: "打卡工時合計:",
         lblNormal: "正常出勤",
         lblNormalSub: "準時到勤",
         lblLate: "遲到 / 早退",
@@ -383,7 +511,7 @@
         thSlot2: "下班 1 (午休出)",
         thSlot3: "上班 2 (午後進)",
         thSlot4: "下班 2 (下午退)",
-        thHours: "工作工時",
+        thHours: "打卡實際工時",
         thStatus: "出勤狀態",
         notFoundPrompt: "在指定月份內未找到該工號的出勤打卡紀錄，請確認工號是否正確。",
         regMainTitle: "萬和包裝（富壽）有限公司 · 員工管理規章與工作守則",
@@ -394,7 +522,7 @@
         tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
         tabRegulations: "Nội quy & Quy chế (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
-        queryDesc: "Nhập mã nhân viên và nhấn [Tra cứu] / 請輸入工號並點選查詢。",
+        queryDesc: "Giờ thực tế không tính nghỉ 11:30–13:00 / 實際工時排除固定午休 11:30–13:00，非核准加班費。",
         btnUpload: "Nạp file Excel / JSON",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ / 例如: EMP-001, VH001...",
@@ -403,7 +531,7 @@
         promptTitle: "Vui lòng nhập Mã nhân viên (請輸入工號查詢)",
         promptDesc: "Hệ thống bảo mật thông tin cá nhân. Chỉ hiển thị dữ liệu của chính bạn sau khi nhập Mã NV (工號)。",
         lblDays: "Số ngày công (出勤天數)",
-        lblHoursPrefix: "Tổng giờ / 總工時:",
+        lblHoursPrefix: "Giờ chấm công / 打卡工時:",
         lblNormal: "Bình thường (正常)",
         lblNormalSub: "Đúng giờ (準時)",
         lblLate: "Đi muộn/Về sớm (遲到早退)",
@@ -419,7 +547,7 @@
         thSlot2: "Ra 1 (午休出)",
         thSlot3: "Vào 2 (午後進)",
         thSlot4: "Ra 2 (下班 2)",
-        thHours: "Giờ làm (工時)",
+        thHours: "Giờ thực tế (實際工時)",
         thStatus: "Trạng thái (狀態)",
         notFoundPrompt: "Không tìm thấy dữ liệu phù hợp với Mã NV này. (未查到該工號紀錄)",
         regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ / 員工管理規章",
@@ -487,27 +615,27 @@
         vi: "Nghỉ không lương (Việc riêng)",
         zh: "事假/無薪假",
         bi: "事假 (Nghỉ không lương)",
-        color: "bg-indigo-100 text-indigo-800 border-indigo-200"
+        color: "bg-forest-100 text-forest-800 border-forest-200"
       },
       leave: {
         vi: "Nghỉ phép",
         zh: "一般請假",
         bi: "請假 (Nghỉ phép)",
-        color: "bg-blue-100 text-blue-800 border-blue-200"
+        color: "bg-brand-100 text-brand-800 border-brand-200"
       }
     };
 
     function setLanguage(lang) {
       currentLang = lang;
-      localStorage.setItem("portal_lang", lang);
+      try { localStorage.setItem("portal_lang", lang); } catch (e) {}
 
       // Button styles
       ["vi", "zh", "bi"].forEach(k => {
         const btn = document.getElementById("lang-btn-" + k);
         if ((k === "bi" && lang === "bilingual") || k === lang) {
-          btn.className = "px-2.5 py-1 rounded-lg font-bold transition bg-sky-500 text-white shadow-sm";
+          btn.className = "px-2.5 py-1 rounded-lg font-bold transition bg-leaf-500 text-white shadow-sm";
         } else {
-          btn.className = "px-2.5 py-1 rounded-lg font-medium transition text-blue-200 hover:text-white";
+          btn.className = "px-2.5 py-1 rounded-lg font-medium transition text-brand-200 hover:text-white";
         }
       });
 
@@ -553,6 +681,7 @@
       document.getElementById("th-status").innerText = t.thStatus;
 
       renderRegulations();
+      updateMonthOptions();
       updateDataBadge();
       if (currentEmployeeCode) {
         doSearch();
@@ -563,7 +692,7 @@
       const el = document.getElementById("data-updated-text");
       if (!el) return;
       if (!allRecords || allRecords.length === 0) {
-        el.innerText = currentLang === "zh" ? "資料載入中..." : (currentLang === "bilingual" ? "Đang tải dữ liệu / 載入中..." : "Đang tải dữ liệu...");
+        el.innerText = dataLoadFailed ? "Không tải được dữ liệu / 未能載入資料，請載入 ERP 匯出檔案" : (currentLang === "zh" ? "資料載入中..." : (currentLang === "bilingual" ? "Đang tải dữ liệu / 載入中..." : "Đang tải dữ liệu..."));
         return;
       }
       let maxDate = "";
@@ -577,6 +706,39 @@
       } else {
         el.innerText = `Dữ liệu mới nhất đến ngày: ${maxDate} (${allRecords.length} bản ghi)`;
       }
+      el.innerText += ` · ${dataSource}`;
+      if (dataLoadFailed) el.innerText += " · Giữ dữ liệu trước / 保留原資料";
+    }
+
+    function updateMonthOptions() {
+      const select = document.getElementById("input-month");
+      const previous = select.value;
+      select.replaceChildren();
+      const all = document.createElement("option");
+      all.value = "";
+      all.textContent = currentLang === "zh" ? "全部月份" : currentLang === "bilingual" ? "Tất cả tháng / 全部月份" : "Tất cả tháng";
+      select.appendChild(all);
+      for (const month of PortalData.months(allRecords)) {
+        const option = document.createElement("option");
+        option.value = month;
+        option.textContent = month;
+        select.appendChild(option);
+      }
+      select.value = PortalData.months(allRecords).includes(previous) ? previous : "";
+    }
+
+    function applyLoadedData(dataset, source, generation, persist = true) {
+      if (generation !== dataGeneration) return false;
+      allRecords = dataset.records;
+      dataLoadFailed = false;
+      dataSource = source.kind === "manual" ? `File / 檔案: ${source.label}` : source.kind === "cache" ? "Offline cache / 離線快取" : `Server / 網站: ${source.label}`;
+      if (persist) {
+        try { localStorage.setItem("portal_offline_attendance", JSON.stringify({ records: allRecords, exported_at: dataset.exported_at, source })); } catch (e) {}
+      }
+      updateMonthOptions();
+      updateDataBadge();
+      if (currentEmployeeCode) doSearch();
+      return true;
     }
 
     // Tab Switching
@@ -588,27 +750,28 @@
       const regBtn = document.getElementById("tab-regulations-btn");
 
       if (tabId === "attendance") {
-        attBtn.className = "tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-sky-400";
-        regBtn.className = "tab-btn py-3 text-sm font-medium flex items-center gap-2 text-blue-200 hover:text-white";
+        attBtn.className = "tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-leaf-400";
+        regBtn.className = "tab-btn py-3 text-sm font-medium flex items-center gap-2 text-brand-200 hover:text-white";
       } else {
-        regBtn.className = "tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-sky-400";
-        attBtn.className = "tab-btn py-3 text-sm font-medium flex items-center gap-2 text-blue-200 hover:text-white";
+        regBtn.className = "tab-btn active py-3 text-sm font-semibold flex items-center gap-2 text-white border-b-2 border-leaf-400";
+        attBtn.className = "tab-btn py-3 text-sm font-medium flex items-center gap-2 text-brand-200 hover:text-white";
       }
-      lucide.createIcons();
+      createIcons();
     }
 
     // Auto-load data file on init
-    async function loadInitialData() {
+    async function loadInitialData({ useCache = true } = {}) {
+      const generation = ++dataGeneration;
       // 1. Check local cache first for instant mobile render
-      try {
+      if (useCache) try {
         const cached = localStorage.getItem("portal_offline_attendance");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            allRecords = parsed;
-            updateDataBadge();
-            console.log("Loaded cached records:", allRecords.length);
-          }
+          const dataset = PortalData.normalizeDataset(parsed);
+          const manual = parsed.source && parsed.source.kind === "manual";
+          applyLoadedData(dataset, manual ? { kind: "manual", label: String(parsed.source.label || "JSON / Excel") } : { kind: "cache", label: "cache" }, generation, false);
+          // A selected local file stays selected until the user explicitly reloads the website data.
+          if (manual) return true;
         }
       } catch (e) {}
 
@@ -620,78 +783,76 @@
         `attendance.xlsx?${nocache}`
       ];
       for (const url of candidates) {
+        if (generation !== dataGeneration) return null;
         try {
           const res = await fetch(url, { cache: "no-store" });
+          if (generation !== dataGeneration) return null;
           if (res.ok) {
             if (url.includes(".json")) {
-              const data = await res.json();
-              const recs = data.records || data || [];
-              if (Array.isArray(recs) && recs.length > 0) {
-                allRecords = recs;
-                console.log("Loaded latest JSON from server:", allRecords.length);
-                try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
-                updateDataBadge();
-                if (currentEmployeeCode) doSearch();
-                return;
-              }
+              const dataset = PortalData.normalizeDataset(await res.json());
+              if (generation !== dataGeneration) return null;
+              return applyLoadedData(dataset, { kind: "server", label: url.split("?")[0] }, generation);
             } else if (url.includes(".xlsx")) {
-              const arrayBuf = await res.arrayBuffer();
-              parseExcelArrayBuffer(arrayBuf, url);
-              try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
-              updateDataBadge();
-              if (currentEmployeeCode) doSearch();
-              return;
+              const dataset = parseExcelArrayBuffer(await res.arrayBuffer());
+              if (generation !== dataGeneration) return null;
+              return applyLoadedData(dataset, { kind: "server", label: url.split("?")[0] }, generation);
             }
           }
         } catch (e) {
-          // ignore
+          // Try the next format; failed loads never erase a good dataset.
         }
       }
+      if (generation !== dataGeneration) return null;
+      dataLoadFailed = true;
+      updateDataBadge();
+      return false;
     }
 
-    function reloadDefaultData() {
-      try { localStorage.removeItem("portal_offline_attendance"); } catch(e){}
-      loadInitialData().then(() => {
-        alert("Đã xóa bộ nhớ đệm và tải lại dữ liệu mới nhất! / 已清除快取並重新載入最新資料！");
-        if (currentEmployeeCode) doSearch();
-      });
+    async function reloadDefaultData() {
+      const loaded = await loadInitialData({ useCache: false });
+      if (loaded === null) return;
+      alert(loaded ? "Đã tải dữ liệu từ website / 已重新載入網站資料！" : "Không tải được dữ liệu mới; giữ dữ liệu trước / 載入失敗，已保留原資料。請改用 ERP 匯出檔案。");
     }
 
     // Manual upload parser
     function handleFileUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
-
+      const generation = ++dataGeneration;
       const reader = new FileReader();
-      if (file.name.endsWith(".json")) {
+      const failed = err => {
+        if (generation !== dataGeneration) return;
+        dataLoadFailed = true;
+        updateDataBadge();
+        alert(`Không nạp được file; giữ dữ liệu trước / 檔案載入失敗，保留原資料：${err.message}`);
+      };
+      reader.onerror = () => failed(new Error("File read failed / 無法讀取檔案"));
+      if (file.name.toLowerCase().endsWith(".json")) {
         reader.onload = (event) => {
           try {
-            const data = JSON.parse(event.target.result);
-            allRecords = data.records || data || [];
-            try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
-            alert(`Nạp thành công ${allRecords.length} bản ghi! / 成功載入 ${allRecords.length} 筆資料！`);
-            if (currentEmployeeCode) doSearch();
+            const dataset = PortalData.normalizeDataset(JSON.parse(String(event.target.result).replace(/^\uFEFF/, "")));
+            if (applyLoadedData(dataset, { kind: "manual", label: file.name }, generation)) alert(`Nạp thành công ${allRecords.length} bản ghi! / 成功載入 ${allRecords.length} 筆資料！`);
           } catch (err) {
-            alert("Lỗi đọc file JSON: " + err.message);
+            failed(err);
           }
         };
         reader.readAsText(file);
-      } else {
+      } else if (/\.(xlsx|xls)$/i.test(file.name)) {
         reader.onload = (event) => {
           try {
-            parseExcelArrayBuffer(event.target.result, file.name);
-            try { localStorage.setItem("portal_offline_attendance", JSON.stringify(allRecords)); } catch(e){}
-            alert(`Nạp thành công ${allRecords.length} bản ghi Excel! / 成功載入 ${allRecords.length} 筆 Excel！`);
-            if (currentEmployeeCode) doSearch();
+            const dataset = parseExcelArrayBuffer(event.target.result);
+            if (applyLoadedData(dataset, { kind: "manual", label: file.name }, generation)) alert(`Nạp thành công ${allRecords.length} bản ghi Excel! / 成功載入 ${allRecords.length} 筆 Excel！`);
           } catch (err) {
-            alert("Lỗi đọc file Excel: " + err.message);
+            failed(err);
           }
         };
         reader.readAsArrayBuffer(file);
-      }
+      } else failed(new Error("Use .json, .xlsx or .xls"));
+      e.target.value = ""; // Allow selecting the same corrected file again.
     }
 
-    function parseExcelArrayBuffer(buf, filename) {
+    function parseExcelArrayBuffer(buf) {
+      if (!window.XLSX) throw new Error("Excel parser unavailable; use JSON / Excel 解析器未載入，請改用 JSON");
       const wb = XLSX.read(buf, { type: "array" });
       const firstSheetName = wb.SheetNames[0];
       const ws = wb.Sheets[firstSheetName];
@@ -700,18 +861,19 @@
       let headerIndex = -1;
       for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
         const rowStr = (rawRows[i] || []).join(" ").toLowerCase();
-        if (rowStr.includes("mã nv") || rowStr.includes("工號") || rowStr.includes("ngày") || rowStr.includes("họ và tên")) {
+        if ((rowStr.includes("mã nv") || rowStr.includes("工號")) && (rowStr.includes("ngày") || rowStr.includes("日期"))) {
           headerIndex = i;
           break;
         }
       }
-      if (headerIndex === -1) headerIndex = 4;
+      if (headerIndex === -1) throw new Error("Excel attendance header not found / 找不到考勤表頭");
 
       const headers = rawRows[headerIndex] || [];
       const colMap = {};
       headers.forEach((h, idx) => {
         const str = String(h || "").toLowerCase();
         if (str.includes("mã nv") || str.includes("工號")) colMap.emp_code = idx;
+        else if (str.includes("mã cc") || str.includes("打卡機號")) colMap.att_system_id = idx;
         else if (str.includes("họ và tên") || str.includes("姓名")) colMap.name = idx;
         else if (str.includes("bộ phận") || str.includes("部門")) colMap.department = idx;
         else if (str.includes("chức vụ") || str.includes("職務")) colMap.position = idx;
@@ -721,31 +883,51 @@
         else if (str.includes("ra 1") || str.includes("下班 1") || str.includes("ra trưa")) colMap.slot2 = idx;
         else if (str.includes("vào 2") || str.includes("上班 2") || str.includes("vào chiều")) colMap.slot3 = idx;
         else if (str.includes("ra 2") || str.includes("下班 2") || str.includes("ra chiều") || str.includes("giờ ra")) colMap.slot4 = idx;
-        else if (str.includes("giờ làm") || str.includes("工時")) colMap.work_hours = idx;
+        else if (str.includes("存檔工時") || str.includes("giờ đã lưu")) colMap.stored_hours = idx;
+        else if (!str.includes("實際") && !str.includes("計算依據") && !str.includes("giờ thực tế") && !str.includes("cơ sở") && (str.includes("giờ làm") || str.includes("工時"))) colMap.work_hours = idx;
         else if (str.includes("mã tt") || str.includes("狀態代碼")) colMap.status = idx;
       });
+      if (colMap.stored_hours !== undefined) colMap.work_hours = colMap.stored_hours;
+      if (colMap.emp_code === undefined || colMap.date === undefined) throw new Error("Excel requires employee code and date / Excel 需要工號與日期欄");
+
+      const excelDate = value => {
+        if (typeof value === "number") {
+          const parts = XLSX.SSF.parse_date_code(value);
+          if (!parts) throw new Error("Invalid Excel date");
+          return `${parts.y}-${String(parts.m).padStart(2, "0")}-${String(parts.d).padStart(2, "0")}`;
+        }
+        const s = String(value ?? "").trim();
+        const match = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+        return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : s;
+      };
+      const excelTime = value => {
+        if (typeof value !== "number") return value;
+        const seconds = Math.round((value % 1) * 86400) % 86400;
+        return `${String(Math.floor(seconds / 3600)).padStart(2, "0")}:${String(Math.floor(seconds / 60) % 60).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+      };
 
       const parsed = [];
       for (let i = headerIndex + 1; i < rawRows.length; i++) {
         const row = rawRows[i];
-        if (!row || !row[colMap.emp_code || 1]) continue;
+        if (!row || row[colMap.emp_code] == null || String(row[colMap.emp_code]).trim() === "") continue;
 
         parsed.push({
           employee_code: String(row[colMap.emp_code] || "").trim(),
+          att_system_id: String(row[colMap.att_system_id] ?? "").trim(),
           name: String(row[colMap.name] || "").trim(),
-          department: String(row[colMap.department] || "生產部").trim(),
-          position: String(row[colMap.position] || "作業員").trim(),
-          date: String(row[colMap.date] || "").trim(),
+          department: String(row[colMap.department] ?? "").trim(),
+          position: String(row[colMap.position] ?? "").trim(),
+          date: excelDate(row[colMap.date]),
           weekday_vi: String(row[colMap.weekday] || "").trim(),
-          check_in: String(row[colMap.slot1] || "").trim() || null,
-          lunch_out: String(row[colMap.slot2] || "").trim() || null,
-          lunch_in: String(row[colMap.slot3] || "").trim() || null,
-          check_out: String(row[colMap.slot4] || "").trim() || null,
-          work_hours: parseFloat(row[colMap.work_hours]) || 0,
+          check_in: excelTime(row[colMap.slot1]),
+          lunch_out: excelTime(row[colMap.slot2]),
+          lunch_in: excelTime(row[colMap.slot3]),
+          check_out: excelTime(row[colMap.slot4]),
+          work_hours: row[colMap.work_hours] == null || row[colMap.work_hours] === "" ? null : String(row[colMap.work_hours]).replace(",", "."),
           status: String(row[colMap.status] || "normal").trim(),
         });
       }
-      allRecords = parsed;
+      return PortalData.normalizeDataset(parsed);
     }
 
     // ==================== SEARCH & QUERY LOGIC ====================
@@ -760,21 +942,15 @@
 
       currentEmployeeCode = q;
 
-      // Filter for this specific employee only
-      const userRecords = allRecords.filter(r => {
-        const matchEmp = (r.employee_code && r.employee_code.toLowerCase().includes(q)) ||
-                         (r.name && r.name.toLowerCase().includes(q)) ||
-                         (r.att_system_id && String(r.att_system_id).toLowerCase().includes(q));
-        const matchMonth = !monthFilter || (r.date && r.date.startsWith(monthFilter));
-        return matchEmp && matchMonth;
-      });
+      const result = PortalData.search(allRecords, q, monthFilter);
+      const userRecords = result.records;
 
       if (userRecords.length === 0) {
         const t = I18N[currentLang] || I18N.vi;
         document.getElementById("prompt-before-search").classList.remove("hidden");
         document.getElementById("search-result-container").classList.add("hidden");
         document.getElementById("prompt-title").innerText = "Không tìm thấy dữ liệu (未查到出勤紀錄)";
-        document.getElementById("prompt-desc").innerText = t.notFoundPrompt;
+        document.getElementById("prompt-desc").innerText = result.ambiguous ? "Nhiều nhân viên trùng tên; nhập mã đầy đủ / 姓名符合多位員工，請輸入完整工號。" : t.notFoundPrompt;
         return;
       }
 
@@ -786,7 +962,7 @@
       const first = userRecords[0];
       document.getElementById("res-emp-name").innerText = first.name || "—";
       document.getElementById("res-emp-code").innerText = first.employee_code || "—";
-      document.getElementById("res-emp-dept-pos").innerText = `${first.department || "生產部"} · ${first.position || "作業員"}`;
+      document.getElementById("res-emp-dept-pos").innerText = `${first.department || "—"} · ${first.position || "—"}`;
       document.getElementById("res-month-badge").innerText = monthFilter ? `Kỳ: ${monthFilter}` : `Tổng: ${userRecords.length} ngày`;
 
       // Calculate Stats
@@ -798,8 +974,8 @@
       let absentCount = 0;
 
       userRecords.forEach(r => {
-        totalDays++;
-        totalHours += parseFloat(r.work_hours || 0);
+        if (r.actual_work_hours > 0) totalDays++;
+        totalHours += r.actual_work_hours ?? 0;
         const s = (r.status || "").toLowerCase();
         if (s === "normal") normalCount++;
         else if (s === "late" || s === "early_leave") lateCount++;
@@ -808,7 +984,10 @@
       });
 
       document.getElementById("stat-total-days").innerText = totalDays;
-      document.getElementById("stat-total-hours").innerText = totalHours.toFixed(1);
+      document.getElementById("stat-total-hours").innerText = totalHours.toFixed(2);
+      const unknownCount = userRecords.filter(r => r.actual_work_hours === null).length;
+      const estimatedCount = userRecords.filter(r => r.actual_work_hours_source === "outer_punches_estimated").length;
+      document.getElementById("stat-hours-note").innerText = currentLang === "zh" ? `排除固定午休 11:30–13:00。含 ${estimatedCount} 筆估算；${unknownCount} 筆缺漏未計入。` : `Không tính nghỉ 11:30–13:00. Gồm ${estimatedCount} ước tính; ${unknownCount} thiếu giờ chưa cộng.`;
       document.getElementById("stat-normal-days").innerText = normalCount;
       document.getElementById("stat-late-count").innerText = lateCount;
       document.getElementById("stat-leave-days").innerText = leaveCount;
@@ -835,35 +1014,43 @@
 
       const rowsHtml = records.map(r => {
         const badge = getStatusBadge(r.status);
-        const fmt = (v) => (v && v !== "—" ? v.slice(0, 5) : `<span class="text-slate-300 font-normal">—</span>`);
+        const fmt = (v) => (v ? PortalData.escapeHtml(v.slice(0, 5)) : `<span class="text-slate-300 font-normal">—</span>`);
+        const sourceLabels = {
+          four_punches: currentLang === "zh" ? "實際（四打卡）" : "Thực tế (4 lần)",
+          outer_punches_estimated: currentLang === "zh" ? "估算（固定午休 11:30–13:00）" : "Ước tính (nghỉ 11:30–13:00)",
+          partial_punches: currentLang === "zh" ? "部分打卡" : "Chấm công một phần",
+          unavailable: currentLang === "zh" ? "打卡缺漏待核對" : "Thiếu chấm công; cần kiểm tra",
+        };
+        const actual = r.actual_work_hours === null ? "—" : `${r.actual_work_hours.toFixed(2)}h`;
+        const stored = r.work_hours !== null && (r.actual_work_hours === null || r.hours_difference !== null) ? `<div class="text-[11px] font-normal text-amber-700">${currentLang === "zh" ? "原存檔" : "Đã lưu"}: ${r.work_hours.toFixed(2)}h</div>` : "";
 
         return `
           <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-            <td class="py-3 px-3.5 font-mono text-xs font-semibold text-slate-800">${r.date || "—"}</td>
-            <td class="py-3 px-3 text-xs text-center text-slate-500">${r.weekday_vi || r.weekday_zh || "—"}</td>
-            <td class="py-3 px-3 text-center font-mono font-bold text-sky-700 bg-sky-50/50">${fmt(r.check_in)}</td>
+            <td class="py-3 px-3.5 font-mono text-xs font-semibold text-slate-800">${PortalData.escapeHtml(r.date || "—")}</td>
+            <td class="py-3 px-3 text-xs text-center text-slate-500">${PortalData.escapeHtml(currentLang === "zh" ? r.weekday_zh : r.weekday_vi)}</td>
+            <td class="py-3 px-3 text-center font-mono font-bold text-leaf-700 bg-leaf-50/50">${fmt(r.check_in)}</td>
             <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_out)}</td>
             <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_in)}</td>
-            <td class="py-3 px-3 text-center font-mono font-bold text-indigo-700 bg-indigo-50/50">${fmt(r.check_out)}</td>
-            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800">${parseFloat(r.work_hours || 0).toFixed(1)}h</td>
+            <td class="py-3 px-3 text-center font-mono font-bold text-forest-700 bg-forest-50/50">${fmt(r.check_out)}</td>
+            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800">${actual}<div class="text-[11px] font-normal text-slate-500">${sourceLabels[r.actual_work_hours_source]}</div>${stored}</td>
             <td class="py-3 px-4 text-center">${badge}</td>
           </tr>
         `;
       }).join("");
 
       tbody.innerHTML = rowsHtml;
-      lucide.createIcons();
+      createIcons();
     }
 
     function getStatusBadge(statusCode) {
       const code = (statusCode || "normal").toLowerCase();
-      const def = ERP_STATUSES[code] || ERP_STATUSES.normal;
+      const def = Object.prototype.hasOwnProperty.call(ERP_STATUSES, code) ? ERP_STATUSES[code] : { vi: code, zh: code, bi: code, color: "bg-slate-100 text-slate-700 border-slate-200" };
 
       let text = def.vi;
       if (currentLang === "zh") text = def.zh;
       else if (currentLang === "bilingual") text = def.bi;
 
-      return `<span class="px-2.5 py-1 rounded-full text-xs font-bold border ${def.color} inline-block whitespace-nowrap" translate="no">${text}</span>`;
+      return `<span class="px-2.5 py-1 rounded-full text-xs font-bold border ${def.color} inline-block whitespace-nowrap" translate="no">${PortalData.escapeHtml(text)}</span>`;
     }
 
     // ==================== REGULATIONS CONTENT & INTERACTIVE READER ====================
@@ -947,8 +1134,8 @@
       const cards = [
         {
           icon: "clock",
-          iconBg: "bg-blue-100",
-          iconText: "text-blue-700",
+          iconBg: "bg-brand-100",
+          iconText: "text-brand-700",
           title: isZh ? "第一條：工作時間與打卡紀律" : (isBi ? "1. Thời giờ làm việc & Chấm công (工作工時與打卡)" : "1. Thời giờ làm việc & Chấm công"),
           desc: isZh
             ? "標準正常班為 08:00 - 17:00（或依產線排班）。進出廠區必須親自打卡，嚴禁代打卡。遲到 5 分鐘以內每人每月寬限最多 2 次（不扣薪但記入考勤考核）。當月第 3 次遲到起或遲到超過 30 分鐘，必須依規程辦理請假折算（每 30 分鐘折抵 0.5 小時假）。"
@@ -980,8 +1167,8 @@
         },
         {
           icon: "shield-alert",
-          iconBg: "bg-indigo-100",
-          iconText: "text-indigo-700",
+          iconBg: "bg-forest-100",
+          iconText: "text-forest-700",
           title: isZh ? "第四條：服裝穿鞋與勞動安全衛生" : (isBi ? "4. Trang phục, Giày dép & An toàn (服裝儀容與勞安)" : "4. Trang phục & An toàn lao động"),
           desc: isZh
             ? "進入廠區必須穿鞋，可穿包鞋或有後帶涼鞋，全廠區嚴禁穿拖鞋或赤腳！進入車間必須依工位穿戴勞保防護用品（耳塞、手套等）。機台清潔、排除卡紙、換刀換版必須依 SOP 確實停機斷電並掛牌（LOTO），嚴禁跨越或拆除安全防護裝置與急停開關。"
@@ -1014,7 +1201,7 @@
       ];
 
       const cardsHtml = cards.map(c => `
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-blue-300 hover:shadow-sm transition">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-brand-300 hover:shadow-sm transition">
           <div class="flex items-start gap-3">
             <div class="p-2 rounded-lg ${c.iconBg} ${c.iconText} mt-0.5 shrink-0">
               <i data-lucide="${c.icon}" class="w-5 h-5"></i>
@@ -1047,7 +1234,7 @@
                 <div id="rule-page-card-${pNum}" class="bg-white rounded-2xl p-3 sm:p-5 shadow-sm border border-slate-200">
                   <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 text-xs text-slate-500 font-medium select-none">
                     <span class="inline-flex items-center gap-1.5 font-bold text-slate-800 text-xs sm:text-sm">
-                      <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+                      <i data-lucide="file-text" class="w-4 h-4 text-brand-600"></i>
                       <span>${titleText}</span>
                     </span>
                     <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold tracking-wider">${pNum} / 12</span>
@@ -1082,7 +1269,7 @@
               </div>
 
               <button onclick="switchRulePage(${currentRulePage + 1})" ${currentRulePage >= TOTAL_RULE_PAGES ? "disabled" : ""}
-                class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 ${currentRulePage >= TOTAL_RULE_PAGES ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm"}">
+                class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1 ${currentRulePage >= TOTAL_RULE_PAGES ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-brand-600 text-white hover:bg-brand-700 active:scale-95 shadow-sm"}">
                 <span>${texts.btnNext}</span>
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
               </button>
@@ -1104,7 +1291,7 @@
               </button>
               <span class="text-xs font-semibold text-slate-500">${currentRulePage} / ${TOTAL_RULE_PAGES}</span>
               <button onclick="switchRulePage(${currentRulePage + 1})" ${currentRulePage >= TOTAL_RULE_PAGES ? "disabled" : ""}
-                class="px-3.5 py-2 rounded-xl text-xs font-semibold ${currentRulePage >= TOTAL_RULE_PAGES ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"}">
+                class="px-3.5 py-2 rounded-xl text-xs font-semibold ${currentRulePage >= TOTAL_RULE_PAGES ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-brand-600 text-white hover:bg-brand-700 shadow-sm"}">
                 <span>${texts.btnNext}</span>
               </button>
             </div>
@@ -1114,7 +1301,7 @@
 
       container.innerHTML = `
         <!-- Document Meta & Read-only Security Header Banner -->
-        <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white rounded-2xl p-5 sm:p-7 shadow-md">
+        <div class="bg-gradient-to-br from-slate-900 via-brand-950 to-forest-950 text-white rounded-2xl p-5 sm:p-7 shadow-md">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
             <div class="space-y-2.5">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
@@ -1124,7 +1311,7 @@
               <h3 class="text-xl sm:text-2xl font-bold tracking-tight text-white">
                 NỘI QUY LAO ĐỘNG · 員工管理規章 (V1.4)
               </h3>
-              <p class="text-xs sm:text-sm text-blue-200/90 leading-relaxed max-w-2xl">
+              <p class="text-xs sm:text-sm text-brand-200/90 leading-relaxed max-w-2xl">
                 CÔNG TY TNHH BAO BÌ WANHE (PHÚ THỌ) · 萬和包裝（富壽）有限公司
               </p>
 
@@ -1150,7 +1337,7 @@
                 </div>
                 <div>
                   <p class="font-bold text-white">${texts.confidentialBadge}</p>
-                  <p class="text-[11px] text-blue-200 mt-0.5">${texts.confidentialSub}</p>
+                  <p class="text-[11px] text-brand-200 mt-0.5">${texts.confidentialSub}</p>
                 </div>
               </div>
             </div>
@@ -1161,7 +1348,7 @@
         <div class="pt-2">
           <div class="mb-4">
             <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <i data-lucide="bookmark-check" class="w-5 h-5 text-blue-600"></i>
+              <i data-lucide="bookmark-check" class="w-5 h-5 text-brand-600"></i>
               <span>${texts.summaryHeading}</span>
             </h3>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">${texts.summarySub}</p>
@@ -1176,7 +1363,7 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200">
             <div>
               <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
+                <i data-lucide="book-open" class="w-5 h-5 text-brand-600"></i>
                 <span>${texts.readerHeading}</span>
               </h3>
               <p class="text-xs text-slate-500 mt-0.5">${texts.readerSub}</p>
@@ -1187,11 +1374,11 @@
               <!-- Mode buttons -->
               <div class="flex items-center p-1 bg-slate-100 rounded-xl text-xs font-semibold border border-slate-200">
                 <button onclick="setRulesViewMode('continuous')"
-                  class="px-3 py-1.5 rounded-lg transition ${rulesViewMode === 'continuous' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                  class="px-3 py-1.5 rounded-lg transition ${rulesViewMode === 'continuous' ? 'bg-white text-brand-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}">
                   ${texts.modeContinuous}
                 </button>
                 <button onclick="setRulesViewMode('single')"
-                  class="px-3 py-1.5 rounded-lg transition ${rulesViewMode === 'single' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}">
+                  class="px-3 py-1.5 rounded-lg transition ${rulesViewMode === 'single' ? 'bg-white text-brand-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'}">
                   ${texts.modeSingle}
                 </button>
               </div>
@@ -1199,7 +1386,7 @@
               <!-- Jump Dropdown -->
               <div class="relative">
                 <select onchange="switchRulePage(parseInt(this.value))"
-                  class="text-xs bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-medium text-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  class="text-xs bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-medium text-slate-700 shadow-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
                   ${jumpOptions}
                 </select>
               </div>
@@ -1219,12 +1406,12 @@
         </div>
       `;
 
-      lucide.createIcons();
+      createIcons();
     }
 
     // Init
     window.addEventListener("DOMContentLoaded", () => {
-      lucide.createIcons();
+      createIcons();
       setLanguage(currentLang);
       loadInitialData();
     });
