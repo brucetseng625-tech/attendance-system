@@ -100,7 +100,7 @@
       <!-- Query Form Card (Always Visible) -->
       <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
-          <div>
+          <div class="min-w-0 flex-1">
             <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2" id="query-card-title">
               <i data-lucide="search" class="w-5 h-5 text-brand-600"></i>
               <span>Tra cứu thông tin chấm công (考勤資訊查詢)</span>
@@ -108,20 +108,23 @@
             <p class="text-xs text-slate-500 mt-1" id="query-card-desc">
               Nhập mã nhân viên và nhấn nút [Tra cứu] để xem giờ vào ra 4 ca và số ngày công của bạn.
             </p>
-            <div id="data-updated-chip" class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span id="data-updated-text">Đang tải dữ liệu...</span>
+            <div id="data-updated-chip" class="mt-2 max-w-full inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium">
+              <span class="w-1.5 h-1.5 shrink-0 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="data-updated-text" class="min-w-0 break-words">Đang tải dữ liệu...</span>
             </div>
+            <p id="data-retention-warning" role="status" aria-live="polite" class="hidden mt-2 text-xs font-semibold text-amber-800"></p>
+            <p class="mt-2 text-[11px] text-slate-500">File được nạp chỉ dùng trong trình duyệt này, không tải lên website. / 匯入檔案只供此瀏覽器查詢，不會上傳網站。</p>
+            <p class="mt-1 text-[11px] text-slate-500">Dùng cùng trình duyệt thường (không ẩn danh), giữ file gốc và không xóa dữ liệu trình duyệt. / 請使用同一個非無痕瀏覽器、保留原檔，勿清除瀏覽器資料。</p>
           </div>
 
           <!-- Data File Loader (for test / offline use) -->
-          <div class="flex items-center gap-2">
-            <label class="cursor-pointer bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 flex items-center gap-1.5 transition" title="Nạp file Excel hoặc JSON xuất từ ERP">
+          <div class="flex shrink-0 items-center gap-2">
+            <label class="cursor-pointer whitespace-nowrap bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 flex items-center gap-1.5 transition" title="Nạp file Excel hoặc JSON xuất từ ERP">
               <i data-lucide="upload" class="w-3.5 h-3.5 text-brand-600"></i>
               <span id="btn-upload-label">Nạp file Excel / JSON</span>
               <input type="file" id="file-input" accept=".xlsx,.xls,.json" class="hidden" onchange="handleFileUpload(event)" />
             </label>
-            <button onclick="reloadDefaultData()" title="Tải lại dữ liệu (重新載入資料)" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
+            <button onclick="reloadDefaultData()" title="Chuyển sang dữ liệu website (切換至網站資料)" aria-label="Chuyển sang dữ liệu website / 切換至網站資料" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
               <i data-lucide="refresh-cw" class="w-4 h-4"></i>
             </button>
           </div>
@@ -455,6 +458,11 @@
     let dataGeneration = 0;
     let dataSource = "";
     let dataLoadFailed = false;
+    let activeDataSource = null;
+    let activeExportedAt = null;
+    let dataPersistenceFailed = false;
+    let dataUpdateNotice = "";
+    const SESSION_ONLY_WARNING = "Không lưu được trong trình duyệt; chỉ dùng lần xem này. Mở lại có thể trở về dữ liệu cũ. Hãy giữ file gốc và dùng trình duyệt cho phép lưu dữ liệu. / 無法保存在此瀏覽器，僅本次查看有效；重開可能回到舊資料。請保留原匯出檔案，並使用允許保存資料的瀏覽器。";
 
     function createIcons() { if (window.lucide) lucide.createIcons(); }
 
@@ -732,6 +740,13 @@
       }
       el.innerText += ` · ${dataSource}`;
       if (dataLoadFailed) el.innerText += " · Giữ dữ liệu trước / 保留原資料";
+      if (dataPersistenceFailed) el.innerText += " · Chỉ lần xem này / 僅本次查看";
+      if (dataUpdateNotice) el.innerText += ` · ${dataUpdateNotice}`;
+      const warning = document.getElementById("data-retention-warning");
+      if (warning) {
+        warning.innerText = [dataPersistenceFailed ? SESSION_ONLY_WARNING : "", dataUpdateNotice].filter(Boolean).join(" ");
+        warning.classList.toggle("hidden", !warning.innerText);
+      }
     }
 
     function updateMonthOptions() {
@@ -755,14 +770,89 @@
       if (generation !== dataGeneration) return false;
       allRecords = dataset.records;
       dataLoadFailed = false;
-      dataSource = source.kind === "manual" ? `File / 檔案: ${source.label}` : source.kind === "cache" ? "Offline cache / 離線快取" : `Server / 網站: ${source.label}`;
+      dataUpdateNotice = "";
+      activeDataSource = source;
+      activeExportedAt = dataset.exported_at;
+      dataPersistenceFailed = false;
+      dataSource = source.kind === "manual" ? `File / 檔案: ${source.label}` : source.kind === "legacy" ? "Dữ liệu cục bộ phiên bản cũ (đã giữ) / 舊版本機資料（已保留）" : source.kind === "cache" ? "Offline cache / 離線快取" : `Server / 網站: ${source.label}`;
       if (persist) {
-        try { localStorage.setItem("portal_offline_attendance", JSON.stringify({ records: allRecords, exported_at: dataset.exported_at, source })); } catch (e) {}
+        try {
+          const saved = JSON.stringify({ records: allRecords, exported_at: dataset.exported_at, source });
+          localStorage.setItem("portal_offline_attendance", saved);
+          if (localStorage.getItem("portal_offline_attendance") !== saved) throw new Error("Storage verification failed");
+        } catch (e) {
+          // Keep the current view and the browser's previous cache. Never claim
+          // that a successful parse also guarantees persistence across visits.
+          dataPersistenceFailed = true;
+        }
       }
       updateMonthOptions();
       updateDataBadge();
       if (currentEmployeeCode) doSearch();
       return true;
+    }
+
+    function recordCoverage(records) {
+      const counts = new Map();
+      for (const record of records) {
+        // Do not infer identity from a partial name or coerce employee codes.
+        const identity = record.employee_code ? ["code", record.employee_code] : record.att_system_id ? ["device", record.att_system_id] : record.employee_id ? ["id", record.employee_id] : ["name", record.name];
+        const key = JSON.stringify([identity, record.date]);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      return counts;
+    }
+
+    function replacementRisk(dataset) {
+      const incoming = recordCoverage(dataset.records);
+      const existing = recordCoverage(allRecords);
+      let missing = 0;
+      for (const [key, count] of existing) missing += Math.max(0, count - (incoming.get(key) || 0));
+      const ambiguousIdentity = allRecords.concat(dataset.records).some(record => !record.employee_code) || [...existing.values(), ...incoming.values()].some(count => count > 1);
+      const beforeTime = Date.parse(activeExportedAt || "");
+      const nextTime = Date.parse(dataset.exported_at || "");
+      const olderExport = Number.isFinite(beforeTime) && Number.isFinite(nextTime) && nextTime < beforeTime;
+      return { missing, olderExport, ambiguousIdentity, unsafe: missing > 0 || olderExport || ambiguousIdentity };
+    }
+
+    function dateRange(records) {
+      const dates = records.map(record => record.date).sort();
+      return `${dates[0]} ~ ${dates[dates.length - 1]} (${records.length} bản ghi / 筆)`;
+    }
+
+    function applyWebsiteData(dataset, source, generation, explicit) {
+      if (generation !== dataGeneration) return null;
+      const risk = replacementRisk(dataset);
+      if (allRecords.length && !explicit && risk.unsafe) {
+        dataLoadFailed = false;
+        dataUpdateNotice = risk.ambiguousIdentity ? "Không xác minh được mã nhân viên hoặc bản ghi trùng; giữ dữ liệu hiện có / 無法確認員工識別或有重複紀錄，已保留現有資料" : "Dữ liệu website cũ hơn hoặc thiếu bản ghi; giữ dữ liệu hiện có / 網站資料較舊或缺少紀錄，已保留現有資料";
+        updateDataBadge();
+        return "retained";
+      }
+      const localSource = activeDataSource && ["manual", "legacy"].includes(activeDataSource.kind);
+      if (allRecords.length && explicit && (localSource || risk.unsafe)) {
+        const message = `Chuyển sang dữ liệu website sẽ thay thế toàn bộ dữ liệu đang xem, không gộp file. / 切換至網站資料會取代目前整份資料，不會合併。\n\nNguồn hiện có / 現有來源：${dataSource}\nHiện có / 現有：${dateRange(allRecords)}\nWebsite / 網站：${dateRange(dataset.records)}\nThiếu so với hiện có / 比現有少的紀錄：${risk.missing}\n${risk.olderExport ? "Bản xuất website cũ hơn / 網站匯出版本較舊\n" : ""}${risk.ambiguousIdentity ? "Mã nhân viên chưa rõ hoặc có bản ghi trùng / 員工識別不明或有重複紀錄\n" : ""}\nChỉ tiếp tục nếu muốn dùng bản website. Hủy để giữ nguyên. / 確定要改用網站版本才繼續；取消可保留原資料。`;
+        let accepted = false;
+        try { accepted = confirm(message); } catch (e) {
+          if (generation !== dataGeneration) return null;
+          dataUpdateNotice = "Không mở được xác nhận; giữ dữ liệu hiện có / 無法開啟確認，已保留現有資料";
+          updateDataBadge();
+          return "cancelled";
+        }
+        if (!accepted) {
+          if (generation !== dataGeneration) return null;
+          dataUpdateNotice = "Đã hủy chuyển nguồn; giữ dữ liệu hiện có / 已取消切換，保留現有資料";
+          updateDataBadge();
+          return "cancelled";
+        }
+      }
+      if (generation !== dataGeneration) return null;
+      return applyLoadedData(dataset, source, generation);
+    }
+
+    function notifyFileLoaded(excel = false) {
+      if (dataPersistenceFailed) alert(SESSION_ONLY_WARNING);
+      else alert(`Nạp và lưu trong trình duyệt ${allRecords.length} bản ghi${excel ? " Excel" : ""}. Không tải lên website. / 已載入並保存在此瀏覽器 ${allRecords.length} 筆${excel ? " Excel" : ""}資料，未上傳網站。`);
     }
 
     // Tab Switching
@@ -792,10 +882,14 @@
         if (cached) {
           const parsed = JSON.parse(cached);
           const dataset = PortalData.normalizeDataset(parsed);
-          const manual = parsed.source && parsed.source.kind === "manual";
-          applyLoadedData(dataset, manual ? { kind: "manual", label: String(parsed.source.label || "JSON / Excel") } : { kind: "cache", label: "cache" }, generation, false);
-          // A selected local file stays selected until the user explicitly reloads the website data.
-          if (manual) return true;
+          const kind = parsed.source && parsed.source.kind;
+          const protectedLocal = kind !== "server";
+          const source = kind === "manual" ? { kind: "manual", label: String(parsed.source.label || "JSON / Excel") } : protectedLocal ? { kind: "legacy", label: "old local data" } : { kind: "cache", label: "cache" };
+          applyLoadedData(dataset, source, generation, false);
+          // Old imports were stored as unmarked arrays. Their origin cannot be
+          // recovered safely: preserve them rather than assume server ownership.
+          // Do not rewrite/migrate the user's cache just to display it.
+          if (protectedLocal) return true;
         }
       } catch (e) {}
 
@@ -808,23 +902,19 @@
       ];
       for (const url of candidates) {
         if (generation !== dataGeneration) return null;
+        let dataset;
         try {
           const res = await fetch(url, { cache: "no-store" });
           if (generation !== dataGeneration) return null;
-          if (res.ok) {
-            if (url.includes(".json")) {
-              const dataset = PortalData.normalizeDataset(await res.json());
-              if (generation !== dataGeneration) return null;
-              return applyLoadedData(dataset, { kind: "server", label: url.split("?")[0] }, generation);
-            } else if (url.includes(".xlsx")) {
-              const dataset = parseExcelArrayBuffer(await res.arrayBuffer());
-              if (generation !== dataGeneration) return null;
-              return applyLoadedData(dataset, { kind: "server", label: url.split("?")[0] }, generation);
-            }
-          }
+          if (!res.ok) continue;
+          dataset = url.includes(".json") ? PortalData.normalizeDataset(await res.json()) : parseExcelArrayBuffer(await res.arrayBuffer());
         } catch (e) {
-          // Try the next format; failed loads never erase a good dataset.
+          // Only network/format failures may try the next file. A source-switch
+          // decision or UI failure must never be interpreted as a format retry.
+          continue;
         }
+        if (generation !== dataGeneration) return null;
+        return applyWebsiteData(dataset, { kind: "server", label: url.split("?")[0] }, generation, !useCache);
       }
       if (generation !== dataGeneration) return null;
       dataLoadFailed = true;
@@ -834,8 +924,8 @@
 
     async function reloadDefaultData() {
       const loaded = await loadInitialData({ useCache: false });
-      if (loaded === null) return;
-      alert(loaded ? "Đã tải dữ liệu từ website / 已重新載入網站資料！" : "Không tải được dữ liệu mới; giữ dữ liệu trước / 載入失敗，已保留原資料。請改用 ERP 匯出檔案。");
+      if (loaded === null || loaded === "cancelled" || loaded === "retained") return;
+      alert(loaded ? dataPersistenceFailed ? SESSION_ONLY_WARNING : "Đã tải và lưu dữ liệu từ website / 已載入並保存網站資料！" : "Không tải được dữ liệu mới; giữ dữ liệu trước / 載入失敗，已保留原資料。請改用 ERP 匯出檔案。");
     }
 
     // Manual upload parser
@@ -855,7 +945,7 @@
         reader.onload = (event) => {
           try {
             const dataset = PortalData.normalizeDataset(JSON.parse(String(event.target.result).replace(/^\uFEFF/, "")));
-            if (applyLoadedData(dataset, { kind: "manual", label: file.name }, generation)) alert(`Nạp thành công ${allRecords.length} bản ghi! / 成功載入 ${allRecords.length} 筆資料！`);
+            if (applyLoadedData(dataset, { kind: "manual", label: file.name }, generation)) notifyFileLoaded();
           } catch (err) {
             failed(err);
           }
@@ -865,7 +955,7 @@
         reader.onload = (event) => {
           try {
             const dataset = parseExcelArrayBuffer(event.target.result);
-            if (applyLoadedData(dataset, { kind: "manual", label: file.name }, generation)) alert(`Nạp thành công ${allRecords.length} bản ghi Excel! / 成功載入 ${allRecords.length} 筆 Excel！`);
+            if (applyLoadedData(dataset, { kind: "manual", label: file.name }, generation)) notifyFileLoaded(true);
           } catch (err) {
             failed(err);
           }
