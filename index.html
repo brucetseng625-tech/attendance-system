@@ -418,13 +418,26 @@
             const rawHours = row.work_hours;
             const hours = rawHours == null || rawHours === "" ? null : Number(rawHours);
             if (hours !== null && (!Number.isFinite(hours) || hours < 0 || hours > 24 || !["number", "string"].includes(typeof rawHours))) throw new Error("Invalid work_hours (0–24 required)");
+            const rawAbsenceHours = row.absence_hours;
+            const absenceHours = rawAbsenceHours == null || rawAbsenceHours === "" ? null : Number(rawAbsenceHours);
+            if (absenceHours !== null && (!Number.isFinite(absenceHours) || absenceHours <= 0 || absenceHours > 8 || !["number", "string"].includes(typeof rawAbsenceHours))) throw new Error("Invalid absence_hours (>0–8 required)");
+            const statusDayPart = text(row.status_day_part, "status_day_part").toLowerCase() || "full_day";
+            if (!["full_day", "morning", "afternoon"].includes(statusDayPart)) throw new Error("Invalid status_day_part");
+            const rawPaidFraction = row.paid_day_fraction;
+            const paidDayFraction = rawPaidFraction == null || rawPaidFraction === "" ? null : Number(rawPaidFraction);
+            if (paidDayFraction !== null && (!Number.isFinite(paidDayFraction) || paidDayFraction < 0 || paidDayFraction > 1)) throw new Error("Invalid paid_day_fraction (0–1 required)");
             const normalized = {
               employee_code, name, att_system_id,
               employee_id: text(row.employee_id, "employee_id"),
               department: text(row.department, "department"), position: text(row.position, "position"),
               date: date(row.date), weekday_vi: text(row.weekday_vi, "weekday_vi"), weekday_zh: text(row.weekday_zh, "weekday_zh"),
               check_in: time(row.check_in), lunch_out: time(row.lunch_out), lunch_in: time(row.lunch_in), check_out: time(row.check_out),
-              work_hours: hours, status: text(row.status, "status").toLowerCase() || "normal",
+              work_hours: hours, absence_hours: absenceHours,
+              status: text(row.status, "status").toLowerCase() || "normal",
+              status_day_part: statusDayPart,
+              morning_status: text(row.morning_status, "morning_status").toLowerCase() || null,
+              afternoon_status: text(row.afternoon_status, "afternoon_status").toLowerCase() || null,
+              paid_day_fraction: paidDayFraction,
             };
             const weekday = new Date(`${normalized.date}T00:00:00Z`).getUTCDay();
             normalized.weekday_vi ||= ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][weekday];
@@ -1127,7 +1140,7 @@
       document.getElementById("table-showing-count").innerText = `${records.length} ngày / 筆`;
 
       const rowsHtml = records.map(r => {
-        const badge = getStatusBadge(r.status);
+        const badge = getAttendanceStatusDisplay(r);
         const fmt = (v) => (v ? PortalData.escapeHtml(v.slice(0, 5)) : `<span class="text-slate-300 font-normal">—</span>`);
         const sourceLabels = {
           four_punches: currentLang === "zh" ? "四打卡" : "4 lần chấm công",
@@ -1169,6 +1182,25 @@
       else if (currentLang === "bilingual") text = def.bi;
 
       return `<span class="px-2.5 py-1 rounded-full text-xs font-bold border ${def.color} inline-block whitespace-nowrap" translate="no">${PortalData.escapeHtml(text)}</span>`;
+    }
+
+    function getAttendanceStatusDisplay(record) {
+      const part = record.status_day_part || "full_day";
+      const zh = currentLang === "zh";
+      const bilingual = currentLang === "bilingual";
+      let statusHtml = getStatusBadge(record.status);
+      if (part !== "full_day") {
+        const morningLabel = zh ? "上午" : (bilingual ? "Buổi sáng / 上午" : "Buổi sáng");
+        const afternoonLabel = zh ? "下午" : (bilingual ? "Buổi chiều / 下午" : "Buổi chiều");
+        statusHtml = `<div class="space-y-1 text-left"><div><span class="text-[11px] text-slate-500">${morningLabel}:</span> ${getStatusBadge(record.morning_status || (part === "morning" ? record.status : "normal"))}</div><div><span class="text-[11px] text-slate-500">${afternoonLabel}:</span> ${getStatusBadge(record.afternoon_status || (part === "afternoon" ? record.status : "normal"))}</div></div>`;
+      }
+      if (record.absence_hours !== null) {
+        const hoursLabel = zh ? "核准缺勤" : (bilingual ? "Giờ nghỉ đã duyệt / 核准缺勤" : "Giờ nghỉ đã duyệt");
+        const paidLabel = zh ? "計薪比例" : (bilingual ? "Tỷ lệ tính lương / 計薪比例" : "Tỷ lệ tính lương");
+        const paid = record.paid_day_fraction === null ? "—" : `${record.paid_day_fraction} ngày`;
+        statusHtml += `<div class="mt-1 text-[11px] font-semibold text-red-700">${hoursLabel}: ${record.absence_hours}h</div><div class="text-[11px] text-slate-500">${paidLabel}: ${paid}</div>`;
+      }
+      return statusHtml;
     }
 
     // ==================== REGULATIONS CONTENT & INTERACTIVE READER ====================
