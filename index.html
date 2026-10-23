@@ -451,6 +451,25 @@
         return { records, exported_at: !Array.isArray(payload) && payload.exported_at ? text(payload.exported_at, "exported_at") : null };
       }
       const months = records => [...new Set(records.map(r => r.date.slice(0, 7)))].sort().reverse();
+      function freshness(dataset, now = Date.now(), staleAfterDays = 7) {
+        const latestDate = dataset.records.map(record => record.date).sort().at(-1) || null;
+        const exportedTime = Date.parse(dataset.exported_at || "");
+        const latestTime = latestDate ? Date.parse(`${latestDate}T23:59:59Z`) : NaN;
+        const nowTime = now instanceof Date ? now.getTime() : Number(now);
+        const dayMs = 86400000;
+        const exportedAgeDays = Number.isFinite(exportedTime) && Number.isFinite(nowTime)
+          ? Math.max(0, Math.floor((nowTime - exportedTime) / dayMs)) : null;
+        const recordAgeDays = Number.isFinite(latestTime) && Number.isFinite(nowTime)
+          ? Math.max(0, Math.floor((nowTime - latestTime) / dayMs)) : null;
+        return {
+          latestDate,
+          exportedAt: Number.isFinite(exportedTime) ? new Date(exportedTime).toISOString() : null,
+          exportedAgeDays,
+          recordAgeDays,
+          stale: (exportedAgeDays !== null && exportedAgeDays > staleAfterDays)
+            || (recordAgeDays !== null && recordAgeDays > staleAfterDays),
+        };
+      }
       function search(records, query, month = "") {
         const q = key(query);
         if (!q) return { records: [], ambiguous: false };
@@ -460,7 +479,7 @@
         if (identities.size > 1) return { records: [], ambiguous: true };
         return { records: matches.filter(r => !month || r.date.startsWith(month)).sort((a, b) => a.date.localeCompare(b.date)), ambiguous: false };
       }
-      return { normalizeDataset, actualHours, displayHours, formatHours, months, search, escapeHtml, time, date };
+      return { normalizeDataset, actualHours, displayHours, formatHours, months, freshness, search, escapeHtml, time, date };
     })();
   </script>
   <script>
@@ -752,12 +771,25 @@
         el.innerText = `Dữ liệu mới nhất đến ngày: ${maxDate} (${allRecords.length} bản ghi)`;
       }
       el.innerText += ` · ${dataSource}`;
+      const freshness = PortalData.freshness({ records: allRecords, exported_at: activeExportedAt });
+      if (freshness.exportedAt) {
+        const exported = freshness.exportedAt.replace("T", " ").replace(/:\d{2}\.\d{3}Z$/, "Z");
+        el.innerText += ` · Xuất / 匯出：${exported}`;
+      } else {
+        el.innerText += " · Không rõ giờ xuất / 匯出時間不明";
+      }
       if (dataLoadFailed) el.innerText += " · Giữ dữ liệu trước / 保留原資料";
       if (dataPersistenceFailed) el.innerText += " · Chỉ lần xem này / 僅本次查看";
       if (dataUpdateNotice) el.innerText += ` · ${dataUpdateNotice}`;
       const warning = document.getElementById("data-retention-warning");
       if (warning) {
-        warning.innerText = [dataPersistenceFailed ? SESSION_ONLY_WARNING : "", dataUpdateNotice].filter(Boolean).join(" ");
+        const staleWarning = freshness.stale
+          ? `Dữ liệu có thể đã cũ: ngày chấm công mới nhất ${freshness.latestDate}, cách hiện tại ${freshness.recordAgeDays} ngày. / 資料可能過期：最後出勤日期 ${freshness.latestDate}，距今 ${freshness.recordAgeDays} 天。`
+          : "";
+        const loadWarning = dataLoadFailed
+          ? "Không tải được bản website mới; đang hiển thị bản đã lưu trước đó. / 網站更新失敗，目前顯示先前保存版本。"
+          : "";
+        warning.innerText = [loadWarning, staleWarning, dataPersistenceFailed ? SESSION_ONLY_WARNING : "", dataUpdateNotice].filter(Boolean).join(" ");
         warning.classList.toggle("hidden", !warning.innerText);
       }
     }
