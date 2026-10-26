@@ -348,6 +348,21 @@
       };
       const key = value => String(value || "").trim().normalize("NFKC").toLowerCase();
       const deviceKey = value => /^\d+$/.test(key(value)) ? key(value).replace(/^0+(?=\d)/, "") : key(value);
+      // Numeric aliases are deliberately limited to mappings verified against
+      // the ERP employee registry on 2026-10-26.  Do not derive aliases for
+      // every EMP-* code: newer employees may not have an attendance-system ID.
+      const VERIFIED_EMPLOYEE_ALIASES = Object.freeze({
+        "001": "emp-001", "002": "emp-002", "003": "emp-003",
+        "004": "emp-004", "005": "emp-005", "006": "emp-006",
+        "007": "emp-007", "008": "emp-008", "009": "emp-009",
+        "010": "emp-010", "011": "emp-011", "012": "emp-012",
+        "013": "emp-013", "014": "emp-014", "015": "emp-015",
+        "016": "emp-016", "017": "emp-017", "018": "emp-018",
+      });
+      const numericSuffix = value => {
+        const match = key(value).match(/(?:^|-)(\d{3})$/);
+        return match ? match[1] : null;
+      };
       const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
       function date(value) {
         const s = text(value, "date");
@@ -473,7 +488,21 @@
       function search(records, query, month = "") {
         const q = key(query);
         if (!q) return { records: [], ambiguous: false };
-        const direct = records.filter(r => key(r.employee_code) === q || (r.att_system_id && deviceKey(r.att_system_id) === deviceKey(q)));
+        const exactCode = records.filter(r => key(r.employee_code) === q);
+        const legacyDevice = exactCode.length ? [] : records.filter(r => r.att_system_id && deviceKey(r.att_system_id) === deviceKey(q));
+        let direct = exactCode.length ? exactCode : legacyDevice;
+        if (!direct.length && /^\d{3}$/.test(q) && VERIFIED_EMPLOYEE_ALIASES[q]) {
+          // Inspect the complete loaded dataset, not just the selected month.
+          // A future code with the same suffix must make the short form fail
+          // closed instead of silently returning the wrong employee.
+          const suffixCodes = [...new Set(records
+            .map(r => key(r.employee_code))
+            .filter(code => code && numericSuffix(code) === q))];
+          if (suffixCodes.length > 1) return { records: [], ambiguous: true };
+          if (suffixCodes.length === 1 && suffixCodes[0] === VERIFIED_EMPLOYEE_ALIASES[q]) {
+            direct = records.filter(r => key(r.employee_code) === VERIFIED_EMPLOYEE_ALIASES[q]);
+          }
+        }
         const matches = direct.length ? direct : records.filter(r => key(r.name).includes(q));
         const identities = new Set(matches.map(r => key(r.employee_code) || deviceKey(r.att_system_id) || r.employee_id || key(r.name)));
         if (identities.size > 1) return { records: [], ambiguous: true };
