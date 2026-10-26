@@ -113,17 +113,19 @@
               <span id="data-updated-text" class="min-w-0 break-words">Đang tải dữ liệu...</span>
             </div>
             <p id="data-retention-warning" role="status" aria-live="polite" class="hidden mt-2 text-xs font-semibold text-amber-800"></p>
-            <p class="mt-2 text-[11px] text-slate-500">File được nạp chỉ dùng trong trình duyệt này, không tải lên website. / 匯入檔案只供此瀏覽器查詢，不會上傳網站。</p>
-            <p class="mt-1 text-[11px] text-slate-500">Dùng cùng trình duyệt thường (không ẩn danh), giữ file gốc và không xóa dữ liệu trình duyệt. / 請使用同一個非無痕瀏覽器、保留原檔，勿清除瀏覽器資料。</p>
+            <p class="mt-2 text-[11px] text-slate-500">Mặc định luôn dùng dữ liệu website. File cục bộ chỉ là bản offline tạm thời và không tải lên website. / 預設永遠使用網站資料；本機檔只作暫時離線備份，不會上傳網站。</p>
           </div>
 
           <!-- Data File Loader (for test / offline use) -->
           <div class="flex shrink-0 items-center gap-2">
             <label class="cursor-pointer whitespace-nowrap bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 flex items-center gap-1.5 transition" title="Nạp file Excel hoặc JSON xuất từ ERP">
               <i data-lucide="upload" class="w-3.5 h-3.5 text-brand-600"></i>
-              <span id="btn-upload-label">Nạp file Excel / JSON</span>
+              <span id="btn-upload-label">Nạp bản offline / 載入離線檔</span>
               <input type="file" id="file-input" accept=".xlsx,.xls,.json" class="hidden" onchange="handleFileUpload(event)" />
             </label>
+            <button id="offline-backup-button" onclick="loadOfflineBackup()" class="hidden whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-medium border border-amber-200 transition">
+              Dùng bản offline / 使用離線備份
+            </button>
             <button onclick="reloadDefaultData()" title="Chuyển sang dữ liệu website (切換至網站資料)" aria-label="Chuyển sang dữ liệu website / 切換至網站資料" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
               <i data-lucide="refresh-cw" class="w-4 h-4"></i>
             </button>
@@ -523,6 +525,8 @@
     let activeExportedAt = null;
     let dataPersistenceFailed = false;
     let dataUpdateNotice = "";
+    const ACTIVE_CACHE_KEY = "portal_offline_attendance";
+    const MANUAL_BACKUP_KEY = "portal_manual_attendance_backup";
     const SESSION_ONLY_WARNING = "Không lưu được trong trình duyệt; chỉ dùng lần xem này. Mở lại có thể trở về dữ liệu cũ. Hãy giữ file gốc và dùng trình duyệt cho phép lưu dữ liệu. / 無法保存在此瀏覽器，僅本次查看有效；重開可能回到舊資料。請保留原匯出檔案，並使用允許保存資料的瀏覽器。";
 
     function createIcons() { if (window.lucide) lucide.createIcons(); }
@@ -535,7 +539,7 @@
         tabRegulations: "Nội quy lao động (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
         queryDesc: "Giờ hiển thị chỉ tính đủ mỗi 30 phút, không tính nghỉ 11:30–13:00; không thay đổi giờ gốc hay lương. Không phải OT đã duyệt.",
-        btnUpload: "Nạp file Excel / JSON",
+        btnUpload: "Nạp bản offline",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ: EMP-001, VH001 hoặc họ tên...",
         labelMonthInput: "Tháng làm việc (月份篩選):",
@@ -574,7 +578,7 @@
         tabRegulations: "員工管理規章",
         queryTitle: "員工考勤打卡查詢",
         queryDesc: "顯示工時只計完整半小時，一律排除固定午休 11:30–13:00；不改原始工時或薪資，也不代表已核准加班。可展開核對原值。",
-        btnUpload: "載入 Excel / JSON 檔案",
+        btnUpload: "載入離線檔",
         labelEmpInput: "員工工號 (或姓名):",
         placeholderEmpInput: "例如：EMP-001, VH001 或姓名...",
         labelMonthInput: "月份篩選:",
@@ -613,7 +617,7 @@
         tabRegulations: "Nội quy & Quy chế (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
         queryDesc: "Chỉ tính đủ mỗi 30 phút / 只顯示完整半小時；排除午休 11:30–13:00，不改原始工時或薪資，非核准加班。",
-        btnUpload: "Nạp file Excel / JSON",
+        btnUpload: "Nạp bản offline / 載入離線檔",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ / 例如: EMP-001, VH001...",
         labelMonthInput: "Tháng / 月份篩選:",
@@ -852,18 +856,54 @@
       if (persist) {
         try {
           const saved = JSON.stringify({ records: allRecords, exported_at: dataset.exported_at, source });
-          localStorage.setItem("portal_offline_attendance", saved);
-          if (localStorage.getItem("portal_offline_attendance") !== saved) throw new Error("Storage verification failed");
+          const storageKey = ["manual", "legacy"].includes(source.kind) ? MANUAL_BACKUP_KEY : ACTIVE_CACHE_KEY;
+          localStorage.setItem(storageKey, saved);
+          if (localStorage.getItem(storageKey) !== saved) throw new Error("Storage verification failed");
         } catch (e) {
           // Keep the current view and the browser's previous cache. Never claim
           // that a successful parse also guarantees persistence across visits.
           dataPersistenceFailed = true;
         }
       }
+      updateOfflineBackupButton();
       updateMonthOptions();
       updateDataBadge();
       if (currentEmployeeCode) doSearch();
       return true;
+    }
+
+    function updateOfflineBackupButton() {
+      const button = document.getElementById("offline-backup-button");
+      if (!button) return;
+      let available = false;
+      try { available = !!localStorage.getItem(MANUAL_BACKUP_KEY); } catch (e) {}
+      button.classList.toggle("hidden", !available);
+    }
+
+    function preserveLegacyManualCache(raw, parsed) {
+      const kind = parsed && parsed.source && parsed.source.kind;
+      if (kind === "server") return false;
+      try {
+        if (!localStorage.getItem(MANUAL_BACKUP_KEY)) localStorage.setItem(MANUAL_BACKUP_KEY, raw);
+      } catch (e) {}
+      updateOfflineBackupButton();
+      return true;
+    }
+
+    function loadOfflineBackup() {
+      const generation = ++dataGeneration;
+      try {
+        const raw = localStorage.getItem(MANUAL_BACKUP_KEY);
+        if (!raw) throw new Error("No offline backup / 沒有離線備份");
+        const parsed = JSON.parse(raw);
+        const dataset = PortalData.normalizeDataset(parsed);
+        const label = parsed.source && parsed.source.label ? String(parsed.source.label) : "saved offline backup";
+        applyLoadedData(dataset, { kind: "manual", label }, generation, false);
+        dataUpdateNotice = "Đang dùng bản offline theo yêu cầu; tải lại trang sẽ trở về website / 已明確使用離線備份；重新載入頁面會回到網站資料";
+        updateDataBadge();
+      } catch (err) {
+        alert(`Không đọc được bản offline / 無法讀取離線備份：${err.message}`);
+      }
     }
 
     function recordCoverage(records) {
@@ -926,7 +966,7 @@
 
     function notifyFileLoaded(excel = false) {
       if (dataPersistenceFailed) alert(SESSION_ONLY_WARNING);
-      else alert(`Nạp và lưu trong trình duyệt ${allRecords.length} bản ghi${excel ? " Excel" : ""}. Không tải lên website. / 已載入並保存在此瀏覽器 ${allRecords.length} 筆${excel ? " Excel" : ""}資料，未上傳網站。`);
+      else alert(`Đang dùng ${allRecords.length} bản ghi${excel ? " Excel" : ""} offline trong lần xem này. Bản sao được giữ lại; tải lại trang sẽ dùng website. / 本次查看使用 ${allRecords.length} 筆${excel ? " Excel" : ""}離線資料；備份已保留，重新載入會回到網站。`);
     }
 
     // Tab Switching
@@ -952,18 +992,14 @@
       const generation = ++dataGeneration;
       // 1. Check local cache first for instant mobile render
       if (useCache) try {
-        const cached = localStorage.getItem("portal_offline_attendance");
+        const cached = localStorage.getItem(ACTIVE_CACHE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
-          const dataset = PortalData.normalizeDataset(parsed);
           const kind = parsed.source && parsed.source.kind;
-          const protectedLocal = kind !== "server";
-          const source = kind === "manual" ? { kind: "manual", label: String(parsed.source.label || "JSON / Excel") } : protectedLocal ? { kind: "legacy", label: "old local data" } : { kind: "cache", label: "cache" };
-          applyLoadedData(dataset, source, generation, false);
-          // Old imports were stored as unmarked arrays. Their origin cannot be
-          // recovered safely: preserve them rather than assume server ownership.
-          // Do not rewrite/migrate the user's cache just to display it.
-          if (protectedLocal) return true;
+          if (!preserveLegacyManualCache(cached, parsed)) {
+            const dataset = PortalData.normalizeDataset(parsed);
+            applyLoadedData(dataset, { kind: "cache", label: "cache" }, generation, false);
+          }
         }
       } catch (e) {}
 
@@ -999,7 +1035,7 @@
     async function reloadDefaultData() {
       const loaded = await loadInitialData({ useCache: false });
       if (loaded === null || loaded === "cancelled" || loaded === "retained") return;
-      alert(loaded ? dataPersistenceFailed ? SESSION_ONLY_WARNING : "Đã tải và lưu dữ liệu từ website / 已載入並保存網站資料！" : "Không tải được dữ liệu mới; giữ dữ liệu trước / 載入失敗，已保留原資料。請改用 ERP 匯出檔案。");
+      alert(loaded ? dataPersistenceFailed ? SESSION_ONLY_WARNING : "Đã tải và lưu dữ liệu từ website / 已載入並保存網站資料！" : "Không tải được dữ liệu mới; dữ liệu website trước vẫn được giữ. Có thể chọn bản offline đã lưu. / 載入失敗，仍保留先前網站資料；可明確選用已保存的離線備份。");
     }
 
     // Manual upload parser
@@ -1624,6 +1660,7 @@
     window.addEventListener("DOMContentLoaded", () => {
       createIcons();
       setLanguage(currentLang);
+      updateOfflineBackupButton();
       loadInitialData();
     });
   </script>
