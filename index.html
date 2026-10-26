@@ -24,7 +24,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+    html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
     body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    main, section, #search-result-container { min-width: 0; max-width: 100%; }
     .tab-btn.active { border-bottom: 3px solid #a4d48b; color: #ffffff; font-weight: 700; }
     .company-logo {
       display: block;
@@ -40,8 +42,19 @@
     @media (max-width: 639px) {
       .company-logo { width: 68px; height: 86px; }
       .company-heading { font-size: 1.05rem; }
-      .portal-tabs { gap: 1rem; }
+      .portal-tabs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .5rem; }
+      .portal-tabs .tab-btn { min-width: 0; justify-content: center; text-align: center; white-space: normal; }
+      .language-switcher { max-width: 100%; flex-wrap: wrap; justify-content: center; }
     }
+    .attendance-table-scroll {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .attendance-table { min-width: 760px; }
     .no-save-img {
       -webkit-touch-callout: none !important;
       -webkit-user-select: none !important;
@@ -65,7 +78,7 @@
       </div>
 
       <!-- Language Switcher -->
-      <div class="flex items-center gap-1.5 bg-white/10 p-1 rounded-xl border border-white/15 text-xs">
+      <div class="language-switcher flex items-center gap-1.5 bg-white/10 p-1 rounded-xl border border-white/15 text-xs">
         <button onclick="setLanguage('vi')" id="lang-btn-vi" class="px-2.5 py-1 rounded-lg font-medium transition bg-leaf-500 text-white font-bold shadow-sm">
           🇻🇳 Tiếng Việt
         </button>
@@ -198,7 +211,7 @@
       </div>
 
       <!-- State 2: Result Container (Hidden until searched) -->
-      <div id="search-result-container" class="hidden space-y-6">
+      <div id="search-result-container" class="hidden min-w-0 max-w-full space-y-6">
 
         <!-- Employee Info Banner -->
         <div class="bg-gradient-to-r from-brand-900 to-forest-900 text-white rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -277,16 +290,19 @@
 
         <!-- 4-Slot Punch Table -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2" id="table-head-title">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-2">
+            <h3 class="min-w-0 font-bold text-slate-800 text-sm flex items-start gap-2" id="table-head-title">
               <i data-lucide="clock-4" class="w-4 h-4 text-brand-600"></i>
-              <span>Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)</span>
+              <span class="min-w-0 break-words">Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)</span>
             </h3>
-            <span class="text-xs text-slate-500" id="table-showing-count">0 ngày</span>
+            <span class="shrink-0 text-xs text-slate-500" id="table-showing-count">0 ngày</span>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
+          <p class="sm:hidden px-5 pt-3 text-[11px] font-medium text-slate-500">
+            Vuốt ngang trong bảng để xem thêm / 在表格內左右滑動查看更多
+          </p>
+          <div class="attendance-table-scroll" role="region" aria-label="Bảng chấm công có thể cuộn ngang / 出勤表可左右滑動" tabindex="0">
+            <table class="attendance-table w-full text-left text-sm whitespace-nowrap">
               <thead class="bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
                 <tr>
                   <th class="py-3 px-3.5" id="th-date">Ngày (日期)</th>
@@ -906,61 +922,14 @@
       }
     }
 
-    function recordCoverage(records) {
-      const counts = new Map();
-      for (const record of records) {
-        // Do not infer identity from a partial name or coerce employee codes.
-        const identity = record.employee_code ? ["code", record.employee_code] : record.att_system_id ? ["device", record.att_system_id] : record.employee_id ? ["id", record.employee_id] : ["name", record.name];
-        const key = JSON.stringify([identity, record.date]);
-        counts.set(key, (counts.get(key) || 0) + 1);
-      }
-      return counts;
-    }
-
-    function replacementRisk(dataset) {
-      const incoming = recordCoverage(dataset.records);
-      const existing = recordCoverage(allRecords);
-      let missing = 0;
-      for (const [key, count] of existing) missing += Math.max(0, count - (incoming.get(key) || 0));
-      const ambiguousIdentity = allRecords.concat(dataset.records).some(record => !record.employee_code) || [...existing.values(), ...incoming.values()].some(count => count > 1);
-      const beforeTime = Date.parse(activeExportedAt || "");
-      const nextTime = Date.parse(dataset.exported_at || "");
-      const olderExport = Number.isFinite(beforeTime) && Number.isFinite(nextTime) && nextTime < beforeTime;
-      return { missing, olderExport, ambiguousIdentity, unsafe: missing > 0 || olderExport || ambiguousIdentity };
-    }
-
-    function dateRange(records) {
-      const dates = records.map(record => record.date).sort();
-      return `${dates[0]} ~ ${dates[dates.length - 1]} (${records.length} bản ghi / 筆)`;
-    }
-
-    function applyWebsiteData(dataset, source, generation, explicit) {
+    function applyWebsiteData(dataset, source, generation) {
       if (generation !== dataGeneration) return null;
-      const risk = replacementRisk(dataset);
-      if (allRecords.length && !explicit && risk.unsafe) {
-        dataLoadFailed = false;
-        dataUpdateNotice = risk.ambiguousIdentity ? "Không xác minh được mã nhân viên hoặc bản ghi trùng; giữ dữ liệu hiện có / 無法確認員工識別或有重複紀錄，已保留現有資料" : "Dữ liệu website cũ hơn hoặc thiếu bản ghi; giữ dữ liệu hiện có / 網站資料較舊或缺少紀錄，已保留現有資料";
-        updateDataBadge();
-        return "retained";
-      }
-      const localSource = activeDataSource && ["manual", "legacy"].includes(activeDataSource.kind);
-      if (allRecords.length && explicit && (localSource || risk.unsafe)) {
-        const message = `Chuyển sang dữ liệu website sẽ thay thế toàn bộ dữ liệu đang xem, không gộp file. / 切換至網站資料會取代目前整份資料，不會合併。\n\nNguồn hiện có / 現有來源：${dataSource}\nHiện có / 現有：${dateRange(allRecords)}\nWebsite / 網站：${dateRange(dataset.records)}\nThiếu so với hiện có / 比現有少的紀錄：${risk.missing}\n${risk.olderExport ? "Bản xuất website cũ hơn / 網站匯出版本較舊\n" : ""}${risk.ambiguousIdentity ? "Mã nhân viên chưa rõ hoặc có bản ghi trùng / 員工識別不明或有重複紀錄\n" : ""}\nChỉ tiếp tục nếu muốn dùng bản website. Hủy để giữ nguyên. / 確定要改用網站版本才繼續；取消可保留原資料。`;
-        let accepted = false;
-        try { accepted = confirm(message); } catch (e) {
-          if (generation !== dataGeneration) return null;
-          dataUpdateNotice = "Không mở được xác nhận; giữ dữ liệu hiện có / 無法開啟確認，已保留現有資料";
-          updateDataBadge();
-          return "cancelled";
-        }
-        if (!accepted) {
-          if (generation !== dataGeneration) return null;
-          dataUpdateNotice = "Đã hủy chuyển nguồn; giữ dữ liệu hiện có / 已取消切換，保留現有資料";
-          updateDataBadge();
-          return "cancelled";
-        }
-      }
       if (generation !== dataGeneration) return null;
+      // The published website dataset is canonical whenever it can be fetched
+      // and parsed.  A stale server cache or an explicitly selected offline
+      // backup must never require a modal confirmation before upgrading.
+      // Manual/legacy data remains preserved under MANUAL_BACKUP_KEY and can be
+      // selected again with the explicit offline-backup button.
       return applyLoadedData(dataset, source, generation);
     }
 
@@ -1024,7 +993,7 @@
           continue;
         }
         if (generation !== dataGeneration) return null;
-        return applyWebsiteData(dataset, { kind: "server", label: url.split("?")[0] }, generation, !useCache);
+        return applyWebsiteData(dataset, { kind: "server", label: url.split("?")[0] }, generation);
       }
       if (generation !== dataGeneration) return null;
       dataLoadFailed = true;
@@ -1034,7 +1003,7 @@
 
     async function reloadDefaultData() {
       const loaded = await loadInitialData({ useCache: false });
-      if (loaded === null || loaded === "cancelled" || loaded === "retained") return;
+      if (loaded === null) return;
       alert(loaded ? dataPersistenceFailed ? SESSION_ONLY_WARNING : "Đã tải và lưu dữ liệu từ website / 已載入並保存網站資料！" : "Không tải được dữ liệu mới; dữ liệu website trước vẫn được giữ. Có thể chọn bản offline đã lưu. / 載入失敗，仍保留先前網站資料；可明確選用已保存的離線備份。");
     }
 
