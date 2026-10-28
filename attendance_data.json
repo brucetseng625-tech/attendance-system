@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "exported_at": "2026-10-26T02:40:21.517565Z",
+  "exported_at": "2026-10-28T00:42:04.560107Z",
   "metadata": {
-    "export_range": "2026-09-01 ~ 2026-10-23",
-    "total_count": 429,
+    "export_range": "2026-09-01 ~ 2026-10-27",
+    "total_count": 449,
     "field_scope": "approved_minimal_attendance_portal",
-    "published_at": "2026-10-26T02:40:22.406872Z",
-    "records_sha256": "11e684a943f33171aeb8959ea8c650003d0ea875b00efc52add9763515154902"
+    "published_at": "2026-10-28T00:42:05.434210Z",
+    "records_sha256": "1757b63be4a3a851dc56d4053bad655af8597d4d1270e822cd1fd1273250c007"
   },
   "records": [
     {
@@ -4727,7 +4727,227 @@
       "check_out": null,
       "work_hours": 4.03,
       "status": "unpaid_leave"
+    },
+    {
+      "employee_code": "EMP-001",
+      "name": "Phan Thị Hải",
+      "date": "2026-10-26",
+      "check_in": "07:29:00",
+      "lunch_out": "11:32:00",
+      "lunch_in": "12:58:00",
+      "check_out": "17:05:00",
+      "work_hours": 8.1,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-003",
+      "name": "Trần Thị Ly",
+      "date": "2026-10-26",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-004",
+      "name": "Lê Thị Mai",
+      "date": "2026-10-26",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-005",
+      "name": "Hoàng Thị Thảo",
+      "date": "2026-10-26",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-006",
+      "name": "Chu Thị Thúy Quỳnh",
+      "date": "2026-10-26",
+      "check_in": "07:29:00",
+      "lunch_out": "11:33:00",
+      "lunch_in": "12:59:00",
+      "check_out": "17:17:00",
+      "work_hours": 8.3,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-008",
+      "name": "Phùng Văn Tuyền",
+      "date": "2026-10-26",
+      "check_in": "07:30:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 4.0,
+      "status": "unpaid_leave"
+    },
+    {
+      "employee_code": "EMP-009",
+      "name": "Hoàng Thị Chất",
+      "date": "2026-10-26",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-013",
+      "name": "Lê Thị Thủy",
+      "date": "2026-10-26",
+      "check_in": "07:28:00",
+      "lunch_out": "11:33:00",
+      "lunch_in": "12:58:00",
+      "check_out": "17:12:00",
+      "work_hours": 8.23,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-016",
+      "name": "Trịnh Thị Mai Chang",
+      "date": "2026-10-26",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-018",
+      "name": "Kiều Thị Tuyết",
+      "date": "2026-10-26",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-001",
+      "name": "Phan Thị Hải",
+      "date": "2026-10-27",
+      "check_in": "07:26:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 4.07,
+      "status": "unpaid_leave"
+    },
+    {
+      "employee_code": "EMP-003",
+      "name": "Trần Thị Ly",
+      "date": "2026-10-27",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-004",
+      "name": "Lê Thị Mai",
+      "date": "2026-10-27",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-005",
+      "name": "Hoàng Thị Thảo",
+      "date": "2026-10-27",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-006",
+      "name": "Chu Thị Thúy Quỳnh",
+      "date": "2026-10-27",
+      "check_in": "07:27:00",
+      "lunch_out": "11:33:00",
+      "lunch_in": "12:59:00",
+      "check_out": "17:04:00",
+      "work_hours": 8.12,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-008",
+      "name": "Phùng Văn Tuyền",
+      "date": "2026-10-27",
+      "check_in": "07:29:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 4.02,
+      "status": "unpaid_leave"
+    },
+    {
+      "employee_code": "EMP-009",
+      "name": "Hoàng Thị Chất",
+      "date": "2026-10-27",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-013",
+      "name": "Lê Thị Thủy",
+      "date": "2026-10-27",
+      "check_in": "07:28:00",
+      "lunch_out": "11:33:00",
+      "lunch_in": "12:59:00",
+      "check_out": "17:02:00",
+      "work_hours": 8.07,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-016",
+      "name": "Trịnh Thị Mai Chang",
+      "date": "2026-10-27",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
+    },
+    {
+      "employee_code": "EMP-018",
+      "name": "Kiều Thị Tuyết",
+      "date": "2026-10-27",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "work_stoppage"
     }
   ],
-  "total": 429
+  "total": 449
 }
