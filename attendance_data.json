@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "exported_at": "2026-10-28T00:42:04.560107Z",
+  "exported_at": "2026-10-28T01:43:34.432124Z",
   "metadata": {
     "export_range": "2026-09-01 ~ 2026-10-27",
     "total_count": 449,
     "field_scope": "approved_minimal_attendance_portal",
-    "published_at": "2026-10-28T00:42:05.434210Z",
-    "records_sha256": "1757b63be4a3a851dc56d4053bad655af8597d4d1270e822cd1fd1273250c007"
+    "published_at": "2026-10-28T01:43:35.244920Z",
+    "records_sha256": "844cc1d91c27e26ab6357782b02238f60765b789e013fba8bc28bb2c27902b61"
   },
   "records": [
     {
@@ -2856,7 +2856,7 @@
       "lunch_in": "12:56:00",
       "check_out": "17:00:00",
       "work_hours": 4.0,
-      "status": "unpaid_leave"
+      "status": "annual_leave"
     },
     {
       "employee_code": "EMP-004",
