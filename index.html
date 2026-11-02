@@ -264,7 +264,7 @@
               <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
             </div>
             <div class="mt-2 text-2xl font-bold text-amber-600" id="stat-late-count">0</div>
-            <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-late-sub">Trễ sau 08:00</div>
+            <div class="text-[11px] text-slate-400 mt-0.5" id="stat-lbl-late-sub">Trễ sau 07:30</div>
           </div>
 
           <!-- Leaves (Annual, sick, unpaid, etc.) -->
@@ -567,7 +567,7 @@
         lblNormal: "Bình thường",
         lblNormalSub: "Đúng giờ chuẩn",
         lblLate: "Đi muộn / Về sớm",
-        lblLateSub: "Trễ sau 08:00",
+        lblLateSub: "Trễ sau 07:30",
         lblLeave: "Nghỉ phép",
         lblLeaveSub: "Phép năm / có phép",
         lblAbsent: "Vắng mặt",
@@ -606,7 +606,7 @@
         lblNormal: "正常出勤",
         lblNormalSub: "準時到勤",
         lblLate: "遲到 / 早退",
-        lblLateSub: "上午 08:00 後",
+        lblLateSub: "上午 07:30 後",
         lblLeave: "特休 / 請假",
         lblLeaveSub: "年假 / 准假",
         lblAbsent: "曠工 / 缺勤",
@@ -645,7 +645,7 @@
         lblNormal: "Bình thường (正常)",
         lblNormalSub: "Đúng giờ (準時)",
         lblLate: "Đi muộn/Về sớm (遲到早退)",
-        lblLateSub: "Sau 08:00 (遲到)",
+        lblLateSub: "Sau 07:30 (遲到)",
         lblLeave: "Nghỉ phép (請假)",
         lblLeaveSub: "Phép năm / 特休准假",
         lblAbsent: "Vắng mặt (曠工缺勤)",
@@ -1354,10 +1354,10 @@
           iconText: "text-brand-700",
           title: isZh ? "第一條：工作時間與打卡紀律" : (isBi ? "1. Thời giờ làm việc & Chấm công (工作工時與打卡)" : "1. Thời giờ làm việc & Chấm công"),
           desc: isZh
-            ? "標準正常班為 08:00 - 17:00（或依產線排班）。進出廠區必須親自打卡，嚴禁代打卡。遲到 5 分鐘以內每人每月寬限最多 2 次（不扣薪但記入考勤考核）。當月第 3 次遲到起或遲到超過 30 分鐘，必須依規程辦理請假折算（每 30 分鐘折抵 0.5 小時假）。"
+            ? "正常工作日為星期一至星期六：上午 07:30–11:30、下午 13:00–17:00（午休 11:30–13:00），每日 8 小時、每週 48 小時；每週休息日為星期日。進出廠區必須本人打卡，嚴禁代打卡或修改出勤紀錄。遲到或早退 5 分鐘以內，每月合計寬限最多 2 次（不扣薪，但記入考勤考核）；其餘遲到或早退依實際打卡時間折算事假（無薪）：30 分鐘以內 0.5 小時，超過 30 至 60 分鐘 1 小時，之後每多 30 分鐘加 0.5 小時。加班須經員工同意並依法計薪。"
             : (isBi
-              ? "Ca làm việc chuẩn 08:00 - 17:00 (hoặc theo ca phân công). Nghiêm cấm tuyệt đối việc chấm công hộ dưới mọi hình thức. Đi muộn ≤ 5 phút được miễn trừ phạt tiền tối đa 2 lần/tháng (vẫn ghi nhận chuyên cần). Từ lần 3 hoặc muộn > 30 phút phải làm thủ tục xin nghỉ theo nấc 30 phút = 0.5 giờ."
-              : "Ca chuẩn 08:00 - 17:00 (hoặc theo ca). Phải tự mình bấm giờ, nghiêm cấm chấm công hộ dưới mọi hình thức. Đi muộn trong 05 phút tối đa 2 lần/tháng được miễn trừ phạt lương (nhưng tính vào chuyên cần). Từ lần thứ 3 hoặc muộn trên 30 phút bắt buộc tính thủ tục xin nghỉ phép.")
+              ? "Ngày làm việc: Thứ Hai đến Thứ Bảy, sáng 07:30–11:30, chiều 13:00–17:00 (nghỉ trưa 11:30–13:00), 8 giờ/ngày, 48 giờ/tuần; ngày nghỉ hằng tuần là Chủ nhật. Người lao động phải tự chấm công; nghiêm cấm chấm công hộ hoặc sửa dữ liệu chấm công. Đi muộn hoặc về sớm trong 05 phút được khoan dung tối đa 02 lần/tháng (tính chung cả đi muộn và về sớm; không trừ lương nhưng ghi nhận chuyên cần). Các trường hợp khác tính theo giờ chấm công thực tế và quy đổi thành nghỉ việc riêng không lương: ≤ 30 phút = 0,5 giờ; trên 30 đến 60 phút = 1 giờ; sau đó mỗi 30 phút cộng thêm 0,5 giờ. Làm thêm giờ phải có sự đồng ý của người lao động và được trả lương theo luật."
+              : "Ngày làm việc: Thứ Hai đến Thứ Bảy, sáng 07:30–11:30, chiều 13:00–17:00 (nghỉ trưa 11:30–13:00), 8 giờ/ngày, 48 giờ/tuần; ngày nghỉ hằng tuần là Chủ nhật. Người lao động phải tự chấm công; nghiêm cấm chấm công hộ hoặc sửa dữ liệu chấm công. Đi muộn hoặc về sớm trong 05 phút được khoan dung tối đa 02 lần/tháng (tính chung cả đi muộn và về sớm; không trừ lương nhưng ghi nhận chuyên cần). Các trường hợp khác tính theo giờ chấm công thực tế và quy đổi thành nghỉ việc riêng không lương: ≤ 30 phút = 0,5 giờ; trên 30 đến 60 phút = 1 giờ; sau đó mỗi 30 phút cộng thêm 0,5 giờ. Làm thêm giờ phải có sự đồng ý của người lao động và được trả lương theo luật.")
         },
         {
           icon: "calendar-check",
@@ -1376,10 +1376,10 @@
           iconText: "text-amber-700",
           title: isZh ? "第三條：薪資津貼與全勤獎金辦法" : (isBi ? "3. Tiền lương, Phụ cấp & Chuyên cần (津貼與全勤)" : "3. Tiền lương, Phụ cấp & Chuyên cần"),
           desc: isZh
-            ? "富壽萬和每月各項津貼標準：伙食津貼 780,000 VND、交通補貼 350,000 VND、全勤獎金 500,000 VND。全勤獎金發放標準：當月無曠工、無事假無薪假、病假 ≤ 1 天、遲到早退合計 ≤ 2 次。遲到扣款 50,000 VND/次、早退扣款 30,000 VND/次。"
+            ? "富壽萬和每月各項津貼標準：伙食津貼 780,000 VND、交通補貼 350,000 VND、全勤獎金 500,000 VND。全勤獎金：當月沒有請假者全額發放；事假、無薪假、病假（含遲到早退折算的事假時數）合計半天以內者發 50%，超過半天者當月不發。有曠工、遲到早退合計超過 2 次，或當月請產假者，當月不發。年假、婚假、喪假、子女結婚假及國定假日不影響全勤；法律另有規定或公司另有核准者，依相關規定辦理。依勞動法及本規章第 16.1 條，公司不以罰款或扣薪代替紀律處分。"
             : (isBi
-              ? "Chính sách trợ cấp Wanhe Phú Thọ: Tiền ăn 780.000 đ/tháng, Xăng xe 350.000 đ/tháng, Chuyên cần 500.000 đ/tháng. Đạt chuyên cần: không vắng mặt, không nghỉ việc riêng không lương, ốm ≤ 1 ngày, đi muộn/về sớm ≤ 2 lần. Phạt muộn 50.000 đ, về sớm 30.000 đ."
-              : "Tiền ăn giữa ca: 780.000 VNĐ/tháng; Phụ cấp đi lại/xăng xe: 350.000 VNĐ/tháng; Thưởng chuyên cần: 500.000 VNĐ/tháng. Tiêu chuẩn chuyên cần: không vắng mặt, không nghỉ việc riêng không lương, ốm có phép ≤ 1 ngày, đi muộn hoặc về sớm cộng dồn không quá 2 lần.")
+              ? "Phụ cấp hằng tháng của Wanhe Phú Thọ: Tiền ăn 780.000 đ, Phụ cấp đi lại/xăng xe 350.000 đ, Thưởng chuyên cần 500.000 đ. Thưởng chuyên cần: không nghỉ trong tháng được hưởng 100%; tổng thời gian nghỉ việc riêng, nghỉ không lương và nghỉ ốm (kể cả số giờ quy đổi do đi muộn/về sớm) không quá nửa ngày được hưởng 50%, trên nửa ngày thì tháng đó không được hưởng. Vắng mặt không lý do, đi muộn/về sớm cộng dồn quá 02 lần hoặc nghỉ thai sản trong tháng thì không được hưởng. Nghỉ hằng năm, bản thân kết hôn, tang chế, con kết hôn và ngày lễ không ảnh hưởng chuyên cần; trường hợp pháp luật có quy định khác hoặc được Công ty phê duyệt thì thực hiện theo quy định đó. Theo Bộ luật Lao động và Mục 16.1 Nội quy, Công ty không phạt tiền hoặc trừ lương thay cho xử lý kỷ luật."
+              : "Phụ cấp hằng tháng của Wanhe Phú Thọ: Tiền ăn 780.000 đ, Phụ cấp đi lại/xăng xe 350.000 đ, Thưởng chuyên cần 500.000 đ. Thưởng chuyên cần: không nghỉ trong tháng được hưởng 100%; tổng thời gian nghỉ việc riêng, nghỉ không lương và nghỉ ốm (kể cả số giờ quy đổi do đi muộn/về sớm) không quá nửa ngày được hưởng 50%, trên nửa ngày thì tháng đó không được hưởng. Vắng mặt không lý do, đi muộn/về sớm cộng dồn quá 02 lần hoặc nghỉ thai sản trong tháng thì không được hưởng. Nghỉ hằng năm, bản thân kết hôn, tang chế, con kết hôn và ngày lễ không ảnh hưởng chuyên cần; trường hợp pháp luật có quy định khác hoặc được Công ty phê duyệt thì thực hiện theo quy định đó. Theo Bộ luật Lao động và Mục 16.1 Nội quy, Công ty không phạt tiền hoặc trừ lương thay cho xử lý kỷ luật.")
         },
         {
           icon: "shield-alert",
