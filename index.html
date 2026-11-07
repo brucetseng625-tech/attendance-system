@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="google" content="notranslate" />
-  <title>万和包装（富寿）- 员工考勤打卡查询与管理规章 (Wanhe Attendance Portal)</title>
+  <title>萬和包裝（富壽）員工考勤查詢 / Tra cứu chấm công</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -126,12 +126,11 @@
               <span id="data-updated-text" class="min-w-0 break-words">Đang tải dữ liệu...</span>
             </div>
             <p id="data-retention-warning" role="status" aria-live="polite" class="hidden mt-2 text-xs font-semibold text-amber-800"></p>
-            <p class="mt-2 text-[11px] text-slate-500">Mặc định luôn dùng dữ liệu website. File cục bộ chỉ là bản offline tạm thời và không tải lên website. / 預設永遠使用網站資料；本機檔只作暫時離線備份，不會上傳網站。</p>
           </div>
 
           <!-- Data File Loader (for test / offline use) -->
           <div class="flex shrink-0 items-center gap-2">
-            <label class="cursor-pointer whitespace-nowrap bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 flex items-center gap-1.5 transition" title="Nạp file Excel hoặc JSON xuất từ ERP">
+            <label class="hidden" title="Nạp file Excel hoặc JSON xuất từ ERP">
               <i data-lucide="upload" class="w-3.5 h-3.5 text-brand-600"></i>
               <span id="btn-upload-label">Nạp bản offline / 載入離線檔</span>
               <input type="file" id="file-input" accept=".xlsx,.xls,.json" class="hidden" onchange="handleFileUpload(event)" />
@@ -139,7 +138,7 @@
             <button id="offline-backup-button" onclick="loadOfflineBackup()" class="hidden whitespace-nowrap bg-amber-50 hover:bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-medium border border-amber-200 transition">
               Dùng bản offline / 使用離線備份
             </button>
-            <button onclick="reloadDefaultData()" title="Chuyển sang dữ liệu website (切換至網站資料)" aria-label="Chuyển sang dữ liệu website / 切換至網站資料" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
+            <button onclick="reloadDefaultData()" title="Tải lại dữ liệu mới nhất (重新載入最新資料)" aria-label="Tải lại dữ liệu mới nhất / 重新載入最新資料" class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition">
               <i data-lucide="refresh-cw" class="w-4 h-4"></i>
             </button>
           </div>
@@ -206,7 +205,7 @@
           Vui lòng nhập Mã nhân viên để bắt đầu tra cứu
         </h3>
         <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto" id="prompt-desc">
-          Hệ thống bảo mật thông tin cá nhân. Bạn chỉ xem được dữ liệu chấm công và giờ làm của chính mình sau khi nhập đúng Mã NV (工號).
+          Nhập mã nhân viên để xem giờ chấm công và số ngày công.
         </p>
       </div>
 
@@ -293,7 +292,7 @@
           <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-2">
             <h3 class="min-w-0 font-bold text-slate-800 text-sm flex items-start gap-2" id="table-head-title">
               <i data-lucide="clock-4" class="w-4 h-4 text-brand-600"></i>
-              <span class="min-w-0 break-words">Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)</span>
+              <span class="min-w-0 break-words">Chấm công hàng ngày</span>
             </h3>
             <span class="shrink-0 text-xs text-slate-500" id="table-showing-count">0 ngày</span>
           </div>
@@ -554,16 +553,16 @@
         tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
         tabRegulations: "Nội quy lao động (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
-        queryDesc: "Giờ hiển thị chỉ tính đủ mỗi 30 phút, không tính nghỉ 11:30–13:00; không thay đổi giờ gốc hay lương. Không phải OT đã duyệt.",
+        queryDesc: "Giờ làm tính theo mỗi 30 phút, không tính nghỉ trưa 11:30–13:00. Lương và tăng ca theo công ty duyệt.",
         btnUpload: "Nạp bản offline",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ: EMP-001, VH001 hoặc họ tên...",
         labelMonthInput: "Tháng làm việc (月份篩選):",
         btnSearch: "Tra cứu (查詢)",
         promptTitle: "Vui lòng nhập Mã nhân viên để tra cứu",
-        promptDesc: "Hệ thống bảo mật thông tin cá nhân. Bạn chỉ xem được dữ liệu của chính mình sau khi nhập đúng Mã NV (工號).",
+        promptDesc: "Nhập mã nhân viên để xem giờ chấm công và số ngày công.",
         lblDays: "Số ngày công",
-        lblHoursPrefix: "Tổng giờ hiển thị:",
+        lblHoursPrefix: "Tổng giờ:",
         lblNormal: "Bình thường",
         lblNormalSub: "Đúng giờ chuẩn",
         lblLate: "Đi muộn / Về sớm",
@@ -572,17 +571,14 @@
         lblLeaveSub: "Phép năm / có phép",
         lblAbsent: "Vắng mặt",
         lblAbsentSub: "Không có phép",
-        tableHeadTitle: "Chi tiết 4 lần chấm công hàng ngày",
+        tableHeadTitle: "Chấm công hàng ngày",
         thDate: "Ngày",
         thWeekday: "Thứ",
-        thSlot1: "Vào sáng (1)",
-        thSlot2: "Ra trưa (2)",
-        thSlot3: "Vào chiều (3)",
-        thSlot4: "Ra chiều (4)",
-        thHours: "Giờ hiển thị (0.5h)",
-        auditSummary: "Đối chiếu",
-        auditActual: "Giờ tính gốc",
-        auditStored: "Giờ đã lưu",
+        thSlot1: "Vào làm",
+        thSlot2: "Ra nghỉ trưa",
+        thSlot3: "Vào lại",
+        thSlot4: "Tan ca",
+        thHours: "Giờ làm",
         thStatus: "Trạng thái",
         notFoundPrompt: "Không tìm thấy dữ liệu chấm công cho nhân viên này trong khoảng thời gian đã chọn.",
         regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ CÔNG TY",
@@ -593,16 +589,16 @@
         tabAttendance: "出勤打卡查詢",
         tabRegulations: "員工管理規章",
         queryTitle: "員工考勤打卡查詢",
-        queryDesc: "顯示工時只計完整半小時，一律排除固定午休 11:30–13:00；不改原始工時或薪資，也不代表已核准加班。可展開核對原值。",
+        queryDesc: "工時以半小時為單位，午休 11:30–13:00 不算。薪資和加班以公司核定為準。",
         btnUpload: "載入離線檔",
         labelEmpInput: "員工工號 (或姓名):",
         placeholderEmpInput: "例如：EMP-001, VH001 或姓名...",
         labelMonthInput: "月份篩選:",
         btnSearch: "查詢",
         promptTitle: "請在上方輸入員工工號開始查詢",
-        promptDesc: "系統保護員工個人隱私。輸入個人工號後，僅會顯示您自己的打卡明細與當月出勤統計。",
+        promptDesc: "輸入工號後，會顯示打卡紀錄和出勤統計。",
         lblDays: "出勤天數",
-        lblHoursPrefix: "顯示工時合計:",
+        lblHoursPrefix: "工時合計:",
         lblNormal: "正常出勤",
         lblNormalSub: "準時到勤",
         lblLate: "遲到 / 早退",
@@ -611,18 +607,15 @@
         lblLeaveSub: "年假 / 准假",
         lblAbsent: "曠工 / 缺勤",
         lblAbsentSub: "未經准假",
-        tableHeadTitle: "每日四時段打卡紀錄明細",
-        thDate: "出勤日期",
+        tableHeadTitle: "每日打卡紀錄",
+        thDate: "日期",
         thWeekday: "星期",
-        thSlot1: "上班 1 (上午進)",
-        thSlot2: "下班 1 (午休出)",
-        thSlot3: "上班 2 (午後進)",
-        thSlot4: "下班 2 (下午退)",
-        thHours: "顯示工時（0.5h）",
-        auditSummary: "核對原值",
-        auditActual: "打卡計算原值",
-        auditStored: "原存檔工時",
-        thStatus: "出勤狀態",
+        thSlot1: "上班",
+        thSlot2: "午休出去",
+        thSlot3: "午休回來",
+        thSlot4: "下班",
+        thHours: "工時",
+        thStatus: "狀態",
         notFoundPrompt: "在指定月份內未找到該工號的出勤打卡紀錄，請確認工號是否正確。",
         regMainTitle: "萬和包裝（富壽）有限公司 · 員工管理規章與工作守則",
         regMainSub: "總經理核准正式頒布施行 · 正式版本 V1.4 (紙箱紙板製造與印刷)",
@@ -632,16 +625,16 @@
         tabAttendance: "Tra cứu chấm công (出勤打卡查詢)",
         tabRegulations: "Nội quy & Quy chế (員工管理規章)",
         queryTitle: "Tra cứu thông tin chấm công (考勤查詢)",
-        queryDesc: "Chỉ tính đủ mỗi 30 phút / 只顯示完整半小時；排除午休 11:30–13:00，不改原始工時或薪資，非核准加班。",
+        queryDesc: "Giờ làm tính theo mỗi 30 phút, không tính nghỉ trưa 11:30–13:00 / 工時以半小時為單位，午休不算。Lương và tăng ca theo công ty duyệt / 薪資和加班以公司核定為準。",
         btnUpload: "Nạp bản offline / 載入離線檔",
         labelEmpInput: "Mã nhân viên / 工號 (hoặc họ tên):",
         placeholderEmpInput: "Ví dụ / 例如: EMP-001, VH001...",
         labelMonthInput: "Tháng / 月份篩選:",
         btnSearch: "Tra cứu (查詢)",
         promptTitle: "Vui lòng nhập Mã nhân viên (請輸入工號查詢)",
-        promptDesc: "Hệ thống bảo mật thông tin cá nhân. Chỉ hiển thị dữ liệu của chính bạn sau khi nhập Mã NV (工號)。",
+        promptDesc: "Nhập mã nhân viên để xem chấm công / 輸入工號後，會顯示打卡紀錄和出勤統計。",
         lblDays: "Số ngày công (出勤天數)",
-        lblHoursPrefix: "Giờ hiển thị / 顯示工時合計:",
+        lblHoursPrefix: "Tổng giờ / 工時合計:",
         lblNormal: "Bình thường (正常)",
         lblNormalSub: "Đúng giờ (準時)",
         lblLate: "Đi muộn/Về sớm (遲到早退)",
@@ -650,17 +643,14 @@
         lblLeaveSub: "Phép năm / 特休准假",
         lblAbsent: "Vắng mặt (曠工缺勤)",
         lblAbsentSub: "Không phép (曠職)",
-        tableHeadTitle: "Chi tiết 4 lần chấm công hàng ngày (每日四時段打卡明細)",
+        tableHeadTitle: "Chấm công hàng ngày (每日打卡紀錄)",
         thDate: "Ngày (日期)",
         thWeekday: "Thứ (星期)",
-        thSlot1: "Vào 1 (上班 1)",
-        thSlot2: "Ra 1 (午休出)",
-        thSlot3: "Vào 2 (午後進)",
-        thSlot4: "Ra 2 (下班 2)",
-        thHours: "Giờ hiển thị (顯示工時 0.5h)",
-        auditSummary: "Đối chiếu / 核對",
-        auditActual: "Giờ tính gốc / 打卡原值",
-        auditStored: "Giờ đã lưu / 原存檔",
+        thSlot1: "Vào làm (上班)",
+        thSlot2: "Ra trưa (午休出去)",
+        thSlot3: "Vào lại (午休回來)",
+        thSlot4: "Tan ca (下班)",
+        thHours: "Giờ làm (工時)",
         thStatus: "Trạng thái (狀態)",
         notFoundPrompt: "Không tìm thấy dữ liệu phù hợp với Mã NV này. (未查到該工號紀錄)",
         regMainTitle: "NỘI QUY LAO ĐỘNG & QUY CHẾ / 員工管理規章",
@@ -730,13 +720,42 @@
         bi: "事假 (Nghỉ không lương)",
         color: "bg-forest-100 text-forest-800 border-forest-200"
       },
+      child_marriage_leave: {
+        vi: "Con kết hôn",
+        zh: "子女結婚假",
+        bi: "子女結婚假 (Con kết hôn)",
+        color: "bg-pink-100 text-pink-800 border-pink-200"
+      },
       leave: {
         vi: "Nghỉ phép",
-        zh: "一般請假",
+        zh: "請假",
         bi: "請假 (Nghỉ phép)",
         color: "bg-brand-100 text-brand-800 border-brand-200"
+      },
+      public_holiday: {
+        vi: "Nghỉ lễ",
+        zh: "國定假日",
+        bi: "國定假日 (Nghỉ lễ)",
+        color: "bg-slate-100 text-slate-700 border-slate-200"
+      },
+      company_off: {
+        vi: "Nghỉ theo lịch nhà máy",
+        zh: "工廠調休",
+        bi: "工廠調休 (Nghỉ theo lịch)",
+        color: "bg-slate-100 text-slate-700 border-slate-200"
+      },
+      work_stoppage: {
+        vi: "Ngừng việc",
+        zh: "公司停工",
+        bi: "公司停工 (Ngừng việc)",
+        color: "bg-slate-100 text-slate-700 border-slate-200"
       }
     };
+    // Days nobody is expected to punch; they are neither missing punches nor personal leave.
+    const DAY_OFF_STATUSES = new Set(["public_holiday", "company_off", "work_stoppage"]);
+    const WORK_STATUSES = new Set(["normal", "late", "early_leave"]);
+    const hasIncompletePunches = (r) => WORK_STATUSES.has((r.status || "normal").toLowerCase())
+      && ["partial_punches", "unavailable"].includes(r.actual_work_hours_source);
 
     function setLanguage(lang) {
       currentLang = lang;
@@ -813,23 +832,17 @@
         if (r.date && r.date > maxDate) maxDate = r.date;
       }
       if (currentLang === "zh") {
-        el.innerText = `考勤已更新至：${maxDate} (共 ${allRecords.length} 筆)`;
+        el.innerText = `資料更新到：${maxDate}`;
       } else if (currentLang === "bilingual") {
-        el.innerText = `Cập nhật đến / 資料更新至: ${maxDate} (${allRecords.length} 筆/bản ghi)`;
+        el.innerText = `Dữ liệu đến ngày / 資料更新到: ${maxDate}`;
       } else {
-        el.innerText = `Dữ liệu mới nhất đến ngày: ${maxDate} (${allRecords.length} bản ghi)`;
+        el.innerText = `Dữ liệu đến ngày: ${maxDate}`;
       }
-      el.innerText += ` · ${dataSource}`;
+      // Only say where the data came from when it is not the website's own.
+      const fromWebsite = !activeDataSource || activeDataSource.kind === "server";
+      if (!fromWebsite) el.innerText += ` · ${dataSource}`;
+      if (!fromWebsite && dataPersistenceFailed) el.innerText += " · Chỉ lần xem này / 僅本次查看";
       const freshness = PortalData.freshness({ records: allRecords, exported_at: activeExportedAt });
-      if (freshness.exportedAt) {
-        const exported = freshness.exportedAt.replace("T", " ").replace(/:\d{2}\.\d{3}Z$/, "Z");
-        el.innerText += ` · Xuất / 匯出：${exported}`;
-      } else {
-        el.innerText += " · Không rõ giờ xuất / 匯出時間不明";
-      }
-      if (dataLoadFailed) el.innerText += " · Giữ dữ liệu trước / 保留原資料";
-      if (dataPersistenceFailed) el.innerText += " · Chỉ lần xem này / 僅本次查看";
-      if (dataUpdateNotice) el.innerText += ` · ${dataUpdateNotice}`;
       const warning = document.getElementById("data-retention-warning");
       if (warning) {
         const staleWarning = freshness.stale
@@ -838,7 +851,7 @@
         const loadWarning = dataLoadFailed
           ? "Không tải được bản website mới; đang hiển thị bản đã lưu trước đó. / 網站更新失敗，目前顯示先前保存版本。"
           : "";
-        warning.innerText = [loadWarning, staleWarning, dataPersistenceFailed ? SESSION_ONLY_WARNING : "", dataUpdateNotice].filter(Boolean).join(" ");
+        warning.innerText = [loadWarning, staleWarning, (dataPersistenceFailed && activeDataSource && activeDataSource.kind !== "server") ? SESSION_ONLY_WARNING : "", dataUpdateNotice].filter(Boolean).join(" ");
         warning.classList.toggle("hidden", !warning.innerText);
       }
     }
@@ -1155,8 +1168,15 @@
       const first = userRecords[0];
       document.getElementById("res-emp-name").innerText = first.name || "—";
       document.getElementById("res-emp-code").innerText = first.employee_code || "—";
-      document.getElementById("res-emp-dept-pos").innerText = `${first.department || "—"} · ${first.position || "—"}`;
-      document.getElementById("res-month-badge").innerText = monthFilter ? `Kỳ: ${monthFilter}` : `Tổng: ${userRecords.length} ngày`;
+      // The website no longer publishes department or position.
+      const deptPos = [first.department, first.position].filter(Boolean).join(" · ");
+      document.getElementById("res-emp-dept-pos").innerText = deptPos;
+      document.getElementById("res-emp-dept-pos").classList.toggle("hidden", !deptPos);
+      document.getElementById("res-month-badge").innerText = currentLang === "zh"
+        ? (monthFilter ? `月份：${monthFilter}` : `全部 ${userRecords.length} 天`)
+        : currentLang === "bilingual"
+          ? (monthFilter ? `Tháng / 月份: ${monthFilter}` : `Tổng / 全部: ${userRecords.length} ngày`)
+          : (monthFilter ? `Tháng: ${monthFilter}` : `Tổng: ${userRecords.length} ngày`);
 
       // Calculate Stats
       let totalDays = 0;
@@ -1165,6 +1185,7 @@
       let lateCount = 0;
       let leaveCount = 0;
       let absentCount = 0;
+      let dayOffCount = 0;
 
       userRecords.forEach(r => {
         if (r.actual_work_hours > 0) totalDays++;
@@ -1173,14 +1194,24 @@
         if (s === "normal") normalCount++;
         else if (s === "late" || s === "early_leave") lateCount++;
         else if (s === "absent") absentCount++;
+        else if (DAY_OFF_STATUSES.has(s)) dayOffCount++;
         else leaveCount++;
       });
 
       document.getElementById("stat-total-days").innerText = totalDays;
       document.getElementById("stat-total-hours").innerText = PortalData.formatHours(totalHours);
-      const unknownCount = userRecords.filter(r => r.actual_work_hours === null).length;
-      const estimatedCount = userRecords.filter(r => r.actual_work_hours_source === "outer_punches_estimated").length;
-      document.getElementById("stat-hours-note").innerText = currentLang === "zh" ? `每日只計完整半小時後加總，排除午休 11:30–13:00；非薪資或核准加班。含 ${estimatedCount} 筆估算；${unknownCount} 筆缺漏未計入。` : currentLang === "bilingual" ? `完整半小時逐日加總 / Cộng đủ mỗi 30 phút từng ngày；午休 / Nghỉ 11:30–13:00 排除；非薪資或核准加班 / Không phải lương hay OT duyệt。估算 / Ước tính: ${estimatedCount}；缺漏 / Thiếu giờ: ${unknownCount}。` : `Cộng giờ đủ mỗi 30 phút từng ngày; không tính nghỉ 11:30–13:00, không phải lương hay OT duyệt. Gồm ${estimatedCount} ước tính; ${unknownCount} thiếu giờ chưa cộng.`;
+      const incompleteCount = userRecords.filter(hasIncompletePunches).length;
+      document.getElementById("stat-hours-note").innerText = !incompleteCount ? "" : currentLang === "zh"
+        ? `有 ${incompleteCount} 天打卡不完整，請找人資`
+        : currentLang === "bilingual"
+          ? `${incompleteCount} ngày chấm công chưa đủ, hãy báo nhân sự / 有 ${incompleteCount} 天打卡不完整，請找人資`
+          : `${incompleteCount} ngày chấm công chưa đủ, hãy báo nhân sự`;
+      const leaveLabels = I18N[currentLang] || I18N.vi;
+      document.getElementById("stat-lbl-leave-sub").innerText = !dayOffCount ? leaveLabels.lblLeaveSub : currentLang === "zh"
+        ? `放假、停工另有 ${dayOffCount} 天`
+        : currentLang === "bilingual"
+          ? `Nghỉ lễ, ngừng việc / 放假、停工: ${dayOffCount}`
+          : `Nghỉ lễ, ngừng việc: ${dayOffCount} ngày`;
       document.getElementById("stat-normal-days").innerText = normalCount;
       document.getElementById("stat-late-count").innerText = lateCount;
       document.getElementById("stat-leave-days").innerText = leaveCount;
@@ -1203,23 +1234,19 @@
 
     function renderTable(records) {
       const tbody = document.getElementById("attendance-tbody");
-      document.getElementById("table-showing-count").innerText = `${records.length} ngày / 筆`;
+      document.getElementById("table-showing-count").innerText = currentLang === "zh" ? `共 ${records.length} 天` : `${records.length} ngày`;
 
       const rowsHtml = records.map(r => {
         const badge = getAttendanceStatusDisplay(r);
         const fmt = (v) => (v ? PortalData.escapeHtml(v.slice(0, 5)) : `<span class="text-slate-300 font-normal">—</span>`);
-        const sourceLabels = {
-          four_punches: currentLang === "zh" ? "四打卡" : "4 lần chấm công",
-          outer_punches_estimated: currentLang === "zh" ? "估算（固定午休 11:30–13:00）" : "Ước tính (nghỉ 11:30–13:00)",
-          partial_punches: currentLang === "zh" ? "部分打卡" : "Chấm công một phần",
-          unavailable: currentLang === "zh" ? "打卡缺漏待核對" : "Thiếu chấm công; cần kiểm tra",
-        };
-        const showHours = value => value === null ? "—" : `${PortalData.formatHours(value)}h`;
-        const displayed = showHours(r.display_work_hours);
-        const storedDisplay = r.work_hours === null ? null : Math.floor(r.work_hours * 2) / 2;
-        const stored = r.work_hours !== null && (r.display_work_hours === null || r.display_work_hours !== storedDisplay) ? `<div class="text-[11px] font-normal text-amber-700">${currentLang === "zh" ? "原存檔" : "Đã lưu"}: ${showHours(r.work_hours)}</div>` : "";
-        const t = I18N[currentLang] || I18N.vi;
-        const audit = `<details class="text-[11px] font-normal text-slate-500" data-hours-audit><summary class="cursor-pointer">${t.auditSummary}</summary><div>${t.auditActual}: ${showHours(r.actual_work_hours)}</div><div>${t.auditStored}: ${showHours(r.work_hours)}</div></details>`;
+        const say = (vi, zh) => currentLang === "zh" ? zh : currentLang === "bilingual" ? `${vi} / ${zh}` : vi;
+        // A note only when the employee has something to know or do.
+        const hoursNote = hasIncompletePunches(r)
+          ? say("Chấm công chưa đủ, hãy báo nhân sự", "打卡不完整，請找人資")
+          : r.actual_work_hours_source === "outer_punches_estimated"
+            ? say("Không chấm trưa, đã trừ nghỉ trưa", "午休沒打卡，已扣午休")
+            : "";
+        const displayed = r.display_work_hours === null ? "—" : `${PortalData.formatHours(r.display_work_hours)}h`;
 
         return `
           <tr class="hover:bg-slate-50 transition border-b border-slate-100">
@@ -1229,7 +1256,7 @@
             <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_out)}</td>
             <td class="py-3 px-3 text-center font-mono font-semibold text-slate-600 bg-slate-50/50">${fmt(r.lunch_in)}</td>
             <td class="py-3 px-3 text-center font-mono font-bold text-forest-700 bg-forest-50/50">${fmt(r.check_out)}</td>
-            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800"><span data-display-hours>${displayed}</span><div class="text-[11px] font-normal text-slate-500">${sourceLabels[r.actual_work_hours_source]}</div>${stored}${audit}</td>
+            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800"><span data-display-hours>${displayed}</span>${hoursNote ? `<div class="text-[11px] font-normal text-amber-700">${hoursNote}</div>` : ""}</td>
             <td class="py-3 px-4 text-center">${badge}</td>
           </tr>
         `;
