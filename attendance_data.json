@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "exported_at": "2026-11-11T04:11:16.580536Z",
+  "exported_at": "2026-11-12T01:03:08.417091Z",
   "metadata": {
-    "export_range": "2026-09-01 ~ 2026-11-10",
-    "total_count": 556,
+    "export_range": "2026-09-01 ~ 2026-11-11",
+    "total_count": 578,
     "field_scope": "approved_minimal_attendance_portal",
-    "published_at": "2026-11-11T04:11:17.526260Z",
-    "records_sha256": "f4538a123e157632c4ae510204ec40f16a977409761eb0827c00ed77e2ee9e1d",
+    "published_at": "2026-11-12T01:03:09.420894Z",
+    "records_sha256": "680bb6a15cd2dbf180d393e5d45a44a025871cf5b294100a5f3c65ede06aba83",
     "status_labels": {
       "child_marriage_leave": {
         "zh-TW": "子女結婚假",
@@ -4281,7 +4281,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.03,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-018",
@@ -4358,7 +4358,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.0,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-009",
@@ -4468,7 +4468,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.45,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-009",
@@ -4607,11 +4607,11 @@
       "name": "Trịnh Thị Mai Chang",
       "date": "2026-10-22",
       "check_in": "07:28:00",
-      "lunch_out": "08:40:00",
+      "lunch_out": "11:30:00",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 1.2,
-      "status": "unpaid_leave"
+      "work_hours": 4.03,
+      "status": "normal"
     },
     {
       "employee_code": "EMP-018",
@@ -4732,7 +4732,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.03,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-001",
@@ -4798,7 +4798,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.0,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-009",
@@ -4908,7 +4908,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.02,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-009",
@@ -5047,11 +5047,11 @@
       "name": "Trịnh Thị Mai Chang",
       "date": "2026-10-28",
       "check_in": "07:27:00",
-      "lunch_out": "11:00:00",
+      "lunch_out": "11:30:00",
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 3.55,
-      "status": "unpaid_leave"
+      "work_hours": 4.05,
+      "status": "normal"
     },
     {
       "employee_code": "EMP-018",
@@ -5172,7 +5172,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.02,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-001",
@@ -5282,7 +5282,7 @@
       "lunch_in": null,
       "check_out": null,
       "work_hours": 4.02,
-      "status": "unpaid_leave"
+      "status": "normal"
     },
     {
       "employee_code": "EMP-001",
@@ -5490,7 +5490,7 @@
       "lunch_out": null,
       "lunch_in": null,
       "check_out": null,
-      "work_hours": 0.0,
+      "work_hours": null,
       "status": "annual_leave"
     },
     {
@@ -5892,6 +5892,127 @@
     {
       "employee_code": "EMP-001",
       "name": "Phan Thị Hải",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-003",
+      "name": "Trần Thị Ly",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-004",
+      "name": "Lê Thị Mai",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-005",
+      "name": "Hoàng Thị Thảo",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-006",
+      "name": "Chu Thị Thúy Quỳnh",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-008",
+      "name": "Phùng Văn Tuyền",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-009",
+      "name": "Hoàng Thị Chất",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-013",
+      "name": "Lê Thị Thủy",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-016",
+      "name": "Trịnh Thị Mai Chang",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-018",
+      "name": "Kiều Thị Tuyết",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-021",
+      "name": "Hoàng Thị Thu Thủy",
+      "date": "2026-11-07",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "company_off"
+    },
+    {
+      "employee_code": "EMP-001",
+      "name": "Phan Thị Hải",
       "date": "2026-11-09",
       "check_in": "07:29:00",
       "lunch_out": "11:30:00",
@@ -6130,7 +6251,128 @@
       "check_out": "17:01:00",
       "work_hours": 8.1,
       "status": "normal"
+    },
+    {
+      "employee_code": "EMP-001",
+      "name": "Phan Thị Hải",
+      "date": "2026-11-11",
+      "check_in": "07:23:00",
+      "lunch_out": "11:35:00",
+      "lunch_in": "12:57:00",
+      "check_out": "17:09:00",
+      "work_hours": 8.27,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-003",
+      "name": "Trần Thị Ly",
+      "date": "2026-11-11",
+      "check_in": "07:29:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "12:59:00",
+      "check_out": "17:00:00",
+      "work_hours": 8.02,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-004",
+      "name": "Lê Thị Mai",
+      "date": "2026-11-11",
+      "check_in": "07:30:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "12:57:00",
+      "check_out": "17:00:00",
+      "work_hours": 8.0,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-005",
+      "name": "Hoàng Thị Thảo",
+      "date": "2026-11-11",
+      "check_in": "07:26:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "12:54:00",
+      "check_out": "17:00:00",
+      "work_hours": 8.07,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-006",
+      "name": "Chu Thị Thúy Quỳnh",
+      "date": "2026-11-11",
+      "check_in": "07:30:00",
+      "lunch_out": "11:35:00",
+      "lunch_in": "12:56:00",
+      "check_out": "17:09:00",
+      "work_hours": 8.15,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-008",
+      "name": "Phùng Văn Tuyền",
+      "date": "2026-11-11",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": 0.0,
+      "status": "annual_leave"
+    },
+    {
+      "employee_code": "EMP-009",
+      "name": "Hoàng Thị Chất",
+      "date": "2026-11-11",
+      "check_in": "07:24:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "12:56:00",
+      "check_out": "17:00:00",
+      "work_hours": 8.1,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-013",
+      "name": "Lê Thị Thủy",
+      "date": "2026-11-11",
+      "check_in": "07:27:00",
+      "lunch_out": "11:35:00",
+      "lunch_in": "12:58:00",
+      "check_out": "17:07:00",
+      "work_hours": 8.17,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-016",
+      "name": "Trịnh Thị Mai Chang",
+      "date": "2026-11-11",
+      "check_in": "07:28:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "12:55:00",
+      "check_out": "17:00:00",
+      "work_hours": 8.03,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-018",
+      "name": "Kiều Thị Tuyết",
+      "date": "2026-11-11",
+      "check_in": "07:28:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "13:00:00",
+      "check_out": "17:00:00",
+      "work_hours": 8.03,
+      "status": "normal"
+    },
+    {
+      "employee_code": "EMP-021",
+      "name": "Hoàng Thị Thu Thủy",
+      "date": "2026-11-11",
+      "check_in": "07:24:00",
+      "lunch_out": "11:30:00",
+      "lunch_in": "12:56:00",
+      "check_out": "17:01:00",
+      "work_hours": 8.12,
+      "status": "normal"
     }
   ],
-  "total": 556
+  "total": 578
 }
