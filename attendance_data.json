@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "exported_at": "2026-11-13T01:35:51.250681Z",
+  "exported_at": "2026-11-13T01:40:29.350849Z",
   "metadata": {
     "export_range": "2026-09-01 ~ 2026-11-13",
-    "total_count": 599,
+    "total_count": 600,
     "field_scope": "approved_minimal_attendance_portal",
-    "published_at": "2026-11-13T01:35:52.181672Z",
-    "records_sha256": "5dfbcd556d56f6b60392d2fb7cf55ea5f8b1e647f8ee7f8fb0ec80e4c05872e9",
+    "published_at": "2026-11-13T01:40:30.347577Z",
+    "records_sha256": "9dc78ee695374fab5dc6c24a0d7dcefcfeb3d476cb000ce63c0318c4d4431589",
     "status_labels": {
       "child_marriage_leave": {
         "zh-TW": "子女結婚假",
@@ -6539,6 +6539,17 @@
       "status": "normal"
     },
     {
+      "employee_code": "EMP-006",
+      "name": "Chu Thị Thúy Quỳnh",
+      "date": "2026-11-13",
+      "check_in": null,
+      "lunch_out": null,
+      "lunch_in": null,
+      "check_out": null,
+      "work_hours": null,
+      "status": "annual_leave"
+    },
+    {
       "employee_code": "EMP-008",
       "name": "Phùng Văn Tuyền",
       "date": "2026-11-13",
@@ -6605,5 +6616,5 @@
       "status": "normal"
     }
   ],
-  "total": 599
+  "total": 600
 }
